@@ -22,6 +22,7 @@ export function ProposalCard({ title, number, status, date, party, tags }: Propo
       "Em Comissão": "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300",
       "Em Discussão": "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
       Agendada: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
+      "Sem Estado": "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
     }[status] || "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
 
   const partyColor =
@@ -32,7 +33,12 @@ export function ProposalCard({ title, number, status, date, party, tags }: Propo
       PCP: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
       CH: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
       GOV: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
+      IL: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
     }[party] || "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
+
+  // Ensure party and type are not empty
+  const displayParty = party || 'Desconhecido'
+  const displayTags = tags.filter(tag => tag && tag.trim() !== '')
 
   return (
     <Card className="overflow-hidden transition-all hover:shadow-md animate-in">
@@ -42,9 +48,14 @@ export function ProposalCard({ title, number, status, date, party, tags }: Propo
             <Badge variant="outline" className={cn("font-medium", statusColor)}>
               {status}
             </Badge>
-            <Badge variant="outline" className={cn("font-medium", partyColor)}>
-              {party}
+            <Badge className={cn("font-medium", partyColor)}>
+              {displayParty}
             </Badge>
+            {displayTags.slice(1).map((tag) => (
+              <Badge key={tag} variant="secondary">
+                {tag}
+              </Badge>
+            ))}
           </div>
           <h3 className="text-lg font-semibold">{title}</h3>
         </div>
@@ -57,24 +68,18 @@ export function ProposalCard({ title, number, status, date, party, tags }: Propo
           </div>
           <div className="flex items-center text-sm text-muted-foreground">
             <Calendar className="mr-1 h-4 w-4" />
-            <span>{date}</span>
-          </div>
-          <div className="flex flex-wrap gap-1 mt-2">
-            {tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
+            <span>{new Date(date).toLocaleDateString('pt-PT')}</span>
           </div>
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0">
-        <Button variant="ghost" size="sm" className="gap-1 ml-auto">
-          Ver detalhes
-          <ArrowRight className="h-3 w-3" />
+        <Button variant="ghost" size="sm" className="gap-1 ml-auto" asChild>
+          <a href={`/propostas/${number.replace(/\s+/g, '-').toLowerCase()}`}>
+            Ver detalhes
+            <ArrowRight className="h-3 w-3" />
+          </a>
         </Button>
       </CardFooter>
     </Card>
   )
 }
-

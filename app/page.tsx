@@ -1,17 +1,38 @@
-import { ArrowRight, BarChart3, Clock, FileText, Search, TrendingUp, Users } from "lucide-react"
+import Link from "next/link"
+import { ArrowRight, BarChart3, Clock, FileText, Search, Users } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProposalCard } from "@/components/proposal-card"
 import { StatsCard } from "@/components/stats-card"
+import { fetchItems } from "@/lib/api"
 
-export default function Home() {
+
+async function fetchHomeProposals() {
+  try {
+    const response = await fetchItems({
+      page: 1,
+      search: '',
+      types: [],
+      phases: [],
+      authors: [],
+      dateRange: undefined
+    });
+    
+    return response.results.slice(0, 4);
+  } catch (error) {
+    console.error('Error fetching proposals:', error);
+    return [];
+  }
+}
+
+export default async function Home() {
+  const proposals = await fetchHomeProposals();
+
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Hero Section */}
       <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-blue-50 to-white dark:from-blue-950 dark:to-background">
         <div className="container px-4 md:px-6">
           <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
@@ -32,12 +53,14 @@ export default function Home() {
                 </p>
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <Button size="lg" className="gap-1.5">
-                  Explorar Propostas
-                  <ArrowRight className="h-4 w-4" />
+                <Button size="lg" className="gap-1.5" asChild>
+                  <Link href="/propostas">
+                    Explorar Propostas
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
                 </Button>
-                <Button size="lg" variant="outline">
-                  Saber Mais
+                <Button size="lg" variant="outline" asChild>
+                  <Link href="/sobre">Saber Mais</Link>
                 </Button>
               </div>
             </div>
@@ -58,7 +81,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats Section */}
+
       <section className="w-full py-12 md:py-16 lg:py-20">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
@@ -74,7 +97,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
             <StatsCard
               title="Propostas Ativas"
-              value="237"
+              value={proposals.length.toString()}
               description="Propostas em discussão"
               icon={<FileText className="h-5 w-5" />}
               trend="+12% este mês"
@@ -108,7 +131,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Search and Filter Section */}
+
       <section className="w-full py-12 md:py-16 bg-black">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center mb-8">
@@ -127,116 +150,42 @@ export default function Home() {
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input type="search" placeholder="Pesquisar propostas..." className="pl-8 bg-white dark:bg-slate-950" />
               </div>
-              <Button>Pesquisar</Button>
             </div>
-            <Tabs defaultValue="recentes" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="recentes">Recentes</TabsTrigger>
-                <TabsTrigger value="populares">Populares</TabsTrigger>
-                <TabsTrigger value="aprovadas">Aprovadas</TabsTrigger>
-                <TabsTrigger value="rejeitadas">Rejeitadas</TabsTrigger>
-              </TabsList>
-              <TabsContent value="recentes" className="mt-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {proposals.length > 0 ? (
+                proposals.map((proposal) => (
                   <ProposalCard
-                    title="Alteração ao Regime Jurídico das Autarquias Locais"
-                    number="PL 45/XV/1"
-                    status="Em Comissão"
-                    date="2023-05-15"
-                    party="PS"
-                    tags={["Autarquias", "Administração Pública"]}
+                    key={proposal.id}
+                    title={proposal.title}
+                    number={`${proposal.type} ${proposal.external_id}`}
+                    status={proposal.phases?.[0]?.name || 'Sem Estado'}
+                    date={proposal.date}
+                    party={proposal.authors?.[0]?.party || 'Desconhecido'}
+                    tags={[
+                      proposal.type,
+                      ...(proposal.authors
+                        ?.map(author => author.party)
+                        .filter(Boolean) as string[] || [])
+                    ]}
                   />
-                  <ProposalCard
-                    title="Medidas de Apoio às Famílias e à Natalidade"
-                    number="PJL 121/XV/1"
-                    status="Agendada"
-                    date="2023-05-10"
-                    party="PSD"
-                    tags={["Família", "Apoios Sociais"]}
-                  />
-                  <ProposalCard
-                    title="Estratégia Nacional para a Mobilidade Sustentável"
-                    number="PPL 33/XV/1"
-                    status="Em Discussão"
-                    date="2023-05-02"
-                    party="GOV"
-                    tags={["Ambiente", "Transportes"]}
-                  />
+                ))
+              ) : (
+                <div className="col-span-full text-center text-muted-foreground py-8">
+                  Não foram encontradas propostas
                 </div>
-              </TabsContent>
-              <TabsContent value="populares" className="mt-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <ProposalCard
-                    title="Revisão do Estatuto dos Profissionais de Saúde"
-                    number="PJL 89/XV/1"
-                    status="Em Comissão"
-                    date="2023-04-20"
-                    party="BE"
-                    tags={["Saúde", "Trabalho"]}
-                  />
-                  <ProposalCard
-                    title="Programa Nacional de Habitação Acessível"
-                    number="PPL 28/XV/1"
-                    status="Aprovada"
-                    date="2023-04-12"
-                    party="GOV"
-                    tags={["Habitação", "Economia"]}
-                  />
-                </div>
-              </TabsContent>
-              <TabsContent value="aprovadas" className="mt-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <ProposalCard
-                    title="Programa Nacional de Habitação Acessível"
-                    number="PPL 28/XV/1"
-                    status="Aprovada"
-                    date="2023-04-12"
-                    party="GOV"
-                    tags={["Habitação", "Economia"]}
-                  />
-                  <ProposalCard
-                    title="Alterações ao Código do Trabalho"
-                    number="PL 19/XV/1"
-                    status="Aprovada"
-                    date="2023-03-28"
-                    party="PS"
-                    tags={["Trabalho", "Economia"]}
-                  />
-                </div>
-              </TabsContent>
-              <TabsContent value="rejeitadas" className="mt-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <ProposalCard
-                    title="Redução do IVA na Energia"
-                    number="PJL 76/XV/1"
-                    status="Rejeitada"
-                    date="2023-04-05"
-                    party="CH"
-                    tags={["Impostos", "Energia"]}
-                  />
-                  <ProposalCard
-                    title="Nacionalização dos CTT"
-                    number="PJL 62/XV/1"
-                    status="Rejeitada"
-                    date="2023-03-15"
-                    party="PCP"
-                    tags={["Serviços Públicos", "Economia"]}
-                  />
-                </div>
-              </TabsContent>
-            </Tabs>
+              )}
+            </div>
             <div className="flex justify-center mt-8">
-              <Button variant="outline" className="gap-1.5">
-                Ver Todas as Propostas
-                <ArrowRight className="h-4 w-4" />
+              <Button variant="outline" className="gap-1.5" asChild>
+                <Link href="/propostas">
+                  Ver Todas as Propostas
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </Button>
             </div>
           </div>
         </div>
       </section>
-
-      
     </div>
   )
 }
-
