@@ -2,11 +2,11 @@
 import { Proposal } from './types';
 
 /**
- * Get auth token from the API - Server-side version
+ * Get auth token from the API - Server-side version with improved error handling
  */
 export async function getServerAuthToken() {
   try {
-    const API_BASE_URL = process.env.API_BASE_URL;
+    const API_BASE_URL = process.env.API_BASE_URL || 'https://legis.passosperdidos.pt';
     
     const response = await fetch(`${API_BASE_URL}/api/token/`, {
       method: 'POST',
@@ -15,7 +15,7 @@ export async function getServerAuthToken() {
         username: process.env.API_USERNAME,
         password: process.env.API_PASSWORD,
       }),
-      next: { revalidate: 3600 } // Revalidate token cache every hour
+      cache: 'no-store', // Prevent caching to ensure we get a fresh token
     });
     
     if (!response.ok) {
@@ -31,19 +31,26 @@ export async function getServerAuthToken() {
 }
 
 /**
- * Fetch a proposal by its external ID - Server-side version
+ * Fetch a proposal by its external ID - Server-side version with improved error handling
  */
 export async function getProposalForId(externalId: string): Promise<Proposal | null> {
   try {
     const token = await getServerAuthToken();
     const API_BASE_URL = process.env.API_BASE_URL || 'https://legis.passosperdidos.pt';
     
-    const response = await fetch(`${API_BASE_URL}/projetoslei?external_id=${externalId}`, {
+    // Make sure URL is properly encoded
+    const encodedId = encodeURIComponent(externalId);
+    const url = `${API_BASE_URL}/projetoslei?external_id=${encodedId}`;
+    
+    console.log(`Fetching proposal from: ${url}`);
+    
+    const response = await fetch(url, {
       headers: { 'Authorization': `Bearer ${token}` },
-      next: { revalidate: 3600 } // Cache for 1 hour
+      cache: 'no-store' // Prevent caching to ensure fresh data
     });
     
     if (!response.ok) {
+      console.error(`API error: ${response.status} - ${response.statusText}`);
       throw new Error(`API error: ${response.statusText}`);
     }
     
