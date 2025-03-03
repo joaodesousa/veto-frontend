@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: { external_id: stri
   }
   
   return {
-    title: `${proposal.type} ${proposal.external_id} - ${proposal.title}`,
+    title: `${proposal.type} - ${proposal.title}`,
     description: proposal.description,
     openGraph: {
       images: [{

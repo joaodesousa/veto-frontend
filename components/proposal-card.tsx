@@ -74,7 +74,7 @@ export function ProposalCard({ title, number, status, date, party, tags }: Propo
       </CardContent>
       <CardFooter className="p-4 pt-0">
         <Button variant="ghost" size="sm" className="gap-1 ml-auto" asChild>
-          <a href={`/propostas/${number.replace(/\s+/g, '-').toLowerCase()}`}>
+          <a href={`/propostas/${number}`}>
             Ver detalhes
             <ArrowRight className="h-3 w-3" />
           </a>

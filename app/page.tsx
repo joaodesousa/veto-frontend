@@ -2,7 +2,6 @@ import Link from "next/link"
 import { ArrowRight, BarChart3, Clock, FileText, Search, Users } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { ProposalCard } from "@/components/proposal-card"
@@ -157,7 +156,7 @@ export default async function Home() {
                   <ProposalCard
                     key={proposal.id}
                     title={proposal.title}
-                    number={`${proposal.type} ${proposal.external_id}`}
+                    number={`${proposal.external_id}`}
                     status={proposal.phases?.[0]?.name || 'Sem Estado'}
                     date={proposal.date}
                     party={proposal.authors?.[0]?.party || 'Desconhecido'}

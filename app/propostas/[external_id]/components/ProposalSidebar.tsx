@@ -20,6 +20,7 @@ interface Proposal {
   status: string;
   timeline: TimelineItem[];
   deputies: Deputy[];
+  lastUpdate: string;
 }
 
 // Define the props type for the ProposalSidebar component
@@ -41,26 +42,15 @@ export function ProposalSidebar({ proposal }: ProposalSidebarProps) {
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Estado:</span>
               <Badge className={statusColor}>
-                {proposal.status}
+              {proposal.status}
               </Badge>
             </div>
-            {proposal.timeline.length > 0 && (
               <>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Fase Atual:</span>
-                  <span className="text-sm">{proposal.timeline[0].title}</span>
-                </div>
-                <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Última Atualização:</span>
-                  <span className="text-sm">{proposal.timeline[0].date}</span>
+                  <span className="text-sm">{proposal.lastUpdate}</span>
                 </div>
               </>
-            )}
-            <Separator />
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Próxima Etapa:</span>
-              <span className="text-sm">Pendente</span>
-            </div>
           </div>
         </CardContent>
       </Card>

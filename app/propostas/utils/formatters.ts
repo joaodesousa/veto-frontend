@@ -41,12 +41,14 @@ interface Proposal {
   publication_date?: string | null;
 }
 
-interface FormattedProposal {
+export interface FormattedProposal {
   id: string;
   title: string;
+  type: string;
   number: string;
   status: string;
   date: string;
+  lastUpdate: string;
   party: string;
   tags: { name: string }[];
   description: string;
@@ -99,40 +101,85 @@ export function formatProposalData(proposal: Proposal): FormattedProposal {
     description: `Fase: ${phase.name}`,
   })) || [];
   
+  // Get the most recent phase date
+  const mostRecentPhaseDate = proposal.phases?.length 
+    ? new Date(proposal.phases[proposal.phases.length - 1].date).toLocaleDateString('pt-PT')
+    : new Date(proposal.date).toLocaleDateString('pt-PT');
+  
   // Process voting information
   const votesCounts = {
     favor: 0,
     against: 0,
     abstention: 0,
-    parties: {} as { [key: string]: "favor" | "against" | "abstention" }
+    parties: {} as { [key: string]: "favor" | "against" | "abstention" },
+    result: "",
+    date: "",
+    allVotes: [] as Array<{
+      favor: number;
+      against: number;
+      abstention: number;
+      parties: { [key: string]: "favor" | "against" | "abstention" };
+      result: string;
+      date: string;
+    }>
   };
-  
+
   if (proposal.votes && proposal.votes.length > 0) {
-    // Calculate vote counts
-    votesCounts.favor = proposal.votes.reduce((count, vote) => 
-      count + (vote.votes?.a_favor?.length || 0), 0);
+    // Get the most recent vote (assuming votes are ordered chronologically)
+    const latestVote = proposal.votes[0];
     
-    votesCounts.against = proposal.votes.reduce((count, vote) => 
-      count + (vote.votes?.contra?.length || 0), 0);
+    // Set the result and date if available
+    votesCounts.result = latestVote.result || "";
+    votesCounts.date = latestVote.date ? new Date(latestVote.date).toLocaleDateString('pt-PT') : "";
     
-    votesCounts.abstention = proposal.votes.reduce((count, vote) => 
-      count + (vote.votes?.abstencao?.length || 0), 0);
-    
-    // Process party votes (from the first vote object)
-    const firstVote = proposal.votes[0];
-    if (firstVote?.votes) {
-      (firstVote.votes.a_favor || []).forEach(party => {
+    // Calculate vote counts from the votes object
+    if (latestVote.votes) {
+      votesCounts.favor = latestVote.votes.a_favor?.length || 0;
+      votesCounts.against = latestVote.votes.contra?.length || 0;
+      votesCounts.abstention = latestVote.votes.abstencao?.length || 0;
+      
+      // Process party votes
+      (latestVote.votes.a_favor || []).forEach(party => {
         votesCounts.parties[party] = "favor" as const;
       });
       
-      (firstVote.votes.contra || []).forEach(party => {
+      (latestVote.votes.contra || []).forEach(party => {
         votesCounts.parties[party] = "against" as const;
       });
       
-      (firstVote.votes.abstencao || []).forEach(party => {
+      (latestVote.votes.abstencao || []).forEach(party => {
         votesCounts.parties[party] = "abstention" as const;
       });
     }
+    
+    // Process all votes for history
+    votesCounts.allVotes = proposal.votes.map(vote => {
+      const voteCount = {
+        favor: vote.votes?.a_favor?.length || 0,
+        against: vote.votes?.contra?.length || 0,
+        abstention: vote.votes?.abstencao?.length || 0,
+        parties: {} as { [key: string]: "favor" | "against" | "abstention" },
+        result: vote.result || "",
+        date: vote.date ? new Date(vote.date).toLocaleDateString('pt-PT') : ""
+      };
+      
+      // Process party votes for this vote
+      if (vote.votes) {
+        (vote.votes.a_favor || []).forEach(party => {
+          voteCount.parties[party] = "favor" as const;
+        });
+        
+        (vote.votes.contra || []).forEach(party => {
+          voteCount.parties[party] = "against" as const;
+        });
+        
+        (vote.votes.abstencao || []).forEach(party => {
+          voteCount.parties[party] = "abstention" as const;
+        });
+      }
+      
+      return voteCount;
+    });
   }
   
   // Compile document list
@@ -159,9 +206,11 @@ export function formatProposalData(proposal: Proposal): FormattedProposal {
   return {
     id,
     title: proposal.title,
+    type: proposal.type,
     number: `${proposal.type} ${proposal.external_id}`,
-    status: proposal.phases?.[0]?.name || "Em Processamento",
+    status: proposal.phases?.length ? proposal.phases[proposal.phases.length - 1].name : "Em Processamento",
     date: new Date(proposal.date).toLocaleDateString('pt-PT'),
+    lastUpdate: mostRecentPhaseDate,
     party: proposal.authors?.[0]?.party || "Desconhecido",
     tags,
     description: proposal.description || "Sem descrição disponível",

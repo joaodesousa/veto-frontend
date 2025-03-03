@@ -1,35 +1,20 @@
 import { Calendar, FileText, Users } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 import { getStatusColor } from "../../../utils/colors"
+import type { FormattedProposal } from "../../utils/formatters"
 
-// Define the type for the proposal object
+interface ProposalTabsProps {
+  proposal: FormattedProposal;
+}
+
 interface Tag {
-  // Define the structure of a tag if needed, or use string if it's just a string
   name: string;
 }
 
 interface Author {
-  name: string; // Adjust based on the actual structure of an author
+  name: string;
 }
 
-interface Proposal {
-  id: number;
-  status: string;
-  tags: Tag[];
-  title: string;
-  number: string;
-  date: string;
-  authors: Author[];
-}
 
-interface FormattedProposal {
-  status: string;
-  tags: { name: string }[];
-  title: string;
-  number: string;
-  date: string;
-  authors: { name: string }[];
-}
 
 // Define the props type for the ProposalHeader component
 interface ProposalHeaderProps {
@@ -37,25 +22,16 @@ interface ProposalHeaderProps {
 }
 
 export function ProposalHeader({ proposal }: ProposalHeaderProps) {
-  const statusColor = getStatusColor(proposal.status)
+  // Extract the type from the proposal number (e.g., "PJL 121/XV/1" -> "PJL")
+  const type = proposal.type || proposal.number.split(' ')[0];
   
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap gap-2">
-        <Badge className={statusColor}>
-          {proposal.status}
-        </Badge>
-        {proposal.tags.map((tag) => (
-          <Badge key={tag.name} variant="secondary"> {/* Assuming tag has a name property */}
-            {tag.name}
-          </Badge>
-        ))}
-      </div>
       <h1 className="text-3xl font-bold">{proposal.title}</h1>
       <div className="flex flex-col sm:flex-row gap-4 text-sm text-muted-foreground">
         <div className="flex items-center">
           <FileText className="mr-2 h-4 w-4" />
-          {proposal.number}
+          {type}
         </div>
         <div className="flex items-center">
           <Calendar className="mr-2 h-4 w-4" />
