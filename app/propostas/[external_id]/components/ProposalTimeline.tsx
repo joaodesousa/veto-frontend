@@ -5,6 +5,7 @@ import { Timeline, TimelineItem } from "@/components/timeline"
 interface TimelineItemType {
   date: string;
   title: string;
+  description?: string;
 }
 
 // Define the props type for the ProposalTimeline component
@@ -20,13 +21,14 @@ export function ProposalTimeline({ timeline }: ProposalTimelineProps) {
         <CardDescription>Acompanhe o percurso desta proposta legislativa</CardDescription>
       </CardHeader>
       <CardContent>
-        {timeline.length > 0 ? (
+        {timeline && timeline.length > 0 ? (
           <Timeline>
             {timeline.map((item, index) => (
               <TimelineItem
-                key={index}
+                key={`${item.title}-${index}`}
                 date={item.date}
                 title={item.title}
+                description={item.description || ''}
                 isLast={index === timeline.length - 1}
               />
             ))}

@@ -6,21 +6,41 @@ import { ProposalVoting } from "./ProposalVoting"
 import { ProposalDocuments } from "./ProposalDocuments"
 
 // Define an interface for the proposal prop
+interface TimelineItem {
+  date: string;
+  title: string;
+  description: string;
+}
+
+interface VotesData {
+  favor: number;
+  against: number;
+  abstention: number;
+  parties: { [key: string]: "favor" | "against" | "abstention" };
+}
+
+interface DocumentItem {
+  title: string;
+  type: string;
+  date: string;
+  url: string;
+}
+
 interface ProposalTabsProps {
   proposal: {
     description: string;
-    timeline: any[];
-    votes: any;
-    documents: any[];
+    timeline: TimelineItem[];
+    votes: VotesData;
+    documents: DocumentItem[];
   }
 }
 
 export function ProposalTabs({ proposal }: ProposalTabsProps) {
   return (
     <>
-      <ProposalAbout description={proposal.description} />
+      <ProposalAbout description={proposal.description || 'Sem descrição disponível'} />
 
-      <Tabs defaultValue="timeline">
+      <Tabs defaultValue="timeline" className="mt-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="timeline">Cronologia</TabsTrigger>
           <TabsTrigger value="voting">Votação</TabsTrigger>

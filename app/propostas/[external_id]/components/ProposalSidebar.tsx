@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { getStatusColor } from "../../../utils/colors"
+import { getStatusColor } from "../../utils/colors"
 
 // Define the type for the proposal object
 interface Deputy {
@@ -73,8 +73,8 @@ export function ProposalSidebar({ proposal }: ProposalSidebarProps) {
         <CardContent>
           {proposal.deputies.length > 0 ? (
             <ul className="space-y-2">
-              {proposal.deputies.map((deputy) => (
-                <li key={deputy.name} className="flex items-center justify-between">
+              {proposal.deputies.map((deputy, index) => (
+                <li key={`${deputy.name}-${index}`} className="flex items-center justify-between">
                   <div className="flex items-center">
                     <Users className="h-4 w-4 mr-2 text-muted-foreground" />
                     <span>{deputy.name}</span>

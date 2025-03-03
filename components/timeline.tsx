@@ -13,12 +13,12 @@ export function Timeline({ children, className }: TimelineProps) {
 interface TimelineItemProps {
   date: string
   title: string
-  description: string
+  description?: string
   isLast?: boolean
   className?: string
 }
 
-export function TimelineItem({ date, title, isLast = false, className }: TimelineItemProps) {
+export function TimelineItem({ date, title, description, isLast = false, className }: TimelineItemProps) {
   return (
     <div className={cn("flex gap-4", className)}>
       <div className="flex flex-col items-center">
@@ -34,4 +34,3 @@ export function TimelineItem({ date, title, isLast = false, className }: Timelin
     </div>
   )
 }
-
