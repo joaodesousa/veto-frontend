@@ -1,3 +1,4 @@
+"use client"
 import { Filter, Grid2X2, List, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,8 +9,39 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Separator } from "@/components/ui/separator"
 import { ProposalFilters } from "@/components/proposal-filters"
 import { Pagination } from "@/components/pagination"
+import { useEffect, useState } from "react"
+import { getHomePageProposals } from "@/lib/server-api"
+import { Proposal } from "@/lib/types"
 
 export default function PropostasPage() {
+  const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProposals = async () => {
+      try {
+        const { proposals } = await getHomePageProposals();
+        setProposals(proposals);
+      } catch (err) {
+        setError("Failed to load proposals");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProposals();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       <div className="flex-1">
@@ -104,48 +136,17 @@ export default function PropostasPage() {
 
                 {/* Proposals Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <ProposalCard
-                    title="Alteração ao Regime Jurídico das Autarquias Locais"
-                    number="PL 45/XV/1"
-                    status="Em Comissão"
-                    date="2023-05-15"
-                    party="PS"
-                  />
-                  <ProposalCard
-                    title="Medidas de Apoio às Famílias e à Natalidade"
-                    number="PJL 121/XV/1"
-                    status="Agendada"
-                    date="2023-05-10"
-                    party="PSD"
-                  />
-                  <ProposalCard
-                    title="Estratégia Nacional para a Mobilidade Sustentável"
-                    number="PPL 33/XV/1"
-                    status="Em Discussão"
-                    date="2023-05-02"
-                    party="GOV"
-                  />
-                  <ProposalCard
-                    title="Revisão do Estatuto dos Profissionais de Saúde"
-                    number="PJL 89/XV/1"
-                    status="Em Comissão"
-                    date="2023-04-20"
-                    party="BE"
-                  />
-                  <ProposalCard
-                    title="Programa Nacional de Habitação Acessível"
-                    number="PPL 28/XV/1"
-                    status="Aprovada"
-                    date="2023-04-12"
-                    party="GOV"
-                  />
-                  <ProposalCard
-                    title="Alterações ao Código do Trabalho"
-                    number="PL 19/XV/1"
-                    status="Aprovada"
-                    date="2023-03-28"
-                    party="PS"
-                  />
+                  {proposals.map((proposal) => (
+                    <ProposalCard
+                      key={proposal.id}
+                      title={proposal.title}
+                      number={proposal.external_id}
+                      status={proposal.status}
+                      date={proposal.date}
+                      party={proposal.party}
+                      type={proposal.type}
+                    />
+                  ))}
                 </div>
 
                 {/* Pagination */}
