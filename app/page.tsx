@@ -75,36 +75,28 @@ export default async function Home() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
             <StatsCard
-              title="Propostas Ativas"
+              title="Propostas"
               value={totalCount}
-              description="Propostas em discussão"
+              description="Propostas nesta legislatura"
               icon={<FileText className="h-5 w-5" />}
-              trend="+12% este mês"
-              trendUp={true}
             />
             <StatsCard
               title="Votações"
               value="1,432"
               description="Votações realizadas"
               icon={<BarChart3 className="h-5 w-5" />}
-              trend="+8% este mês"
-              trendUp={true}
             />
             <StatsCard
               title="Deputados"
               value="230"
               description="Deputados em funções"
               icon={<Users className="h-5 w-5" />}
-              trend="0% este mês"
-              trendUp={null}
             />
             <StatsCard
               title="Tempo Médio"
               value="127"
               description="Dias até aprovação"
               icon={<Clock className="h-5 w-5" />}
-              trend="-5% este mês"
-              trendUp={false}
             />
           </div>
         </div>

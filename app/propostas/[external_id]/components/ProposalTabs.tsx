@@ -17,6 +17,9 @@ interface VotesData {
   against: number;
   abstention: number;
   parties: { [key: string]: "favor" | "against" | "abstention" };
+  allVotes: number;
+  result: string;
+  date: string;
 }
 
 interface DocumentItem {
