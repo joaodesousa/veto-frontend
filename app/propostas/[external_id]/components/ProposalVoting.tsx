@@ -26,36 +26,42 @@ interface ProposalVotingProps {
 }
 
 export function ProposalVoting({ votes }: ProposalVotingProps) {
-  const hasMultipleVotes = votes.allVotes && votes.allVotes.length > 1;
+  // Check if there are any votes available
+  const hasVotes = votes && (
+    (votes.allVotes && votes.allVotes.length > 0) || 
+    votes.favor > 0 || 
+    votes.against > 0 || 
+    votes.abstention > 0 ||
+    (votes.parties && Object.keys(votes.parties).length > 0) ||
+    votes.result
+  );
+  
+  const hasMultipleVotes = votes?.allVotes && votes.allVotes.length > 1;
   
   // Se não houver votos ou se allVotes estiver vazio, use o próprio objeto votes
-  const voteRecords = hasMultipleVotes ? votes.allVotes : [votes];
+  const voteRecords = hasMultipleVotes ? votes.allVotes : (hasVotes ? [votes] : []);
 
   // Formatar a data para exibição
   const formatDate = (dateString: string) => {
     if (!dateString) return "Data não disponível";
-
-    // Attempt to create a date object
-    const date = new Date(dateString);
-
-    // Check if the date is valid
-    if (isNaN(date.getTime())) {
-      return "Data inválida"; // Return a user-friendly message for invalid dates
+    
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-PT', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+      });
+    } catch (e) {
+      return dateString;
     }
-
-    // Format the date if valid
-    return date.toLocaleDateString('pt-PT', { 
-      day: '2-digit', 
-      month: '2-digit', 
-      year: 'numeric' 
-    });
   };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Resultados da Votação</CardTitle>
-        <CardDescription>Como votaram os deputados e partidos</CardDescription>
+        <CardDescription>Como votaram os partidos</CardDescription>
       </CardHeader>
       <CardContent>
         <Accordion type="single" collapsible>
@@ -131,7 +137,7 @@ export function ProposalVoting({ votes }: ProposalVotingProps) {
                                 ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
                                 : vote === "against"
                                   ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                                : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
+                                  : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
                             }
                           >
                             {vote === "favor" ? (

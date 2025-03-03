@@ -9,6 +9,7 @@ interface StatsCardProps {
   icon: React.ReactNode
   trend: string
   trendUp: boolean | null
+  totalCount: number
 }
 
 export function StatsCard({ title, value, description, icon, trend, trendUp }: StatsCardProps) {

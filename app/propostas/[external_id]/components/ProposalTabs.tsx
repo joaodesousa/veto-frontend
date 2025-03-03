@@ -30,7 +30,7 @@ interface ProposalTabsProps {
   proposal: {
     description: string;
     timeline: TimelineItem[];
-    votes: VotesData;
+    votes: VotesData & { hasVotes?: boolean };
     documents: DocumentItem[];
   }
 }

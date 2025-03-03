@@ -33,6 +33,7 @@ interface Proposal {
   external_id: string;
   date: string;
   description?: string;
+  party: string;
   phases?: Phase[];
   authors?: Author[];
   votes?: Vote[];
@@ -50,7 +51,6 @@ export interface FormattedProposal {
   date: string;
   lastUpdate: string;
   party: string;
-  tags: { name: string }[];
   description: string;
   authors: string[];
   deputies: {name: string; party?: string}[];
@@ -68,14 +68,6 @@ export interface FormattedProposal {
 export function formatProposalData(proposal: Proposal): FormattedProposal {
   // Convert id to string if it's a number
   const id = typeof proposal.id === 'number' ? proposal.id.toString() : proposal.id;
-  
-  // Extract unique tags from type and author parties
-  const tags = [
-    proposal.type,
-    ...(proposal.authors?.map(author => author.party).filter(Boolean) || [])
-  ]
-  .filter((value, index, self) => value && self.indexOf(value) === index)
-  .map(tag => ({ name: tag as string }));
   
   // Format authors' names (from name case to Title Case)
   const authors = proposal.authors?.map(author => 
@@ -106,23 +98,25 @@ export function formatProposalData(proposal: Proposal): FormattedProposal {
     ? new Date(proposal.phases[proposal.phases.length - 1].date).toLocaleDateString('pt-PT')
     : new Date(proposal.date).toLocaleDateString('pt-PT');
   
-  // Process voting information
-  const votesCounts = {
-    favor: 0,
-    against: 0,
-    abstention: 0,
-    parties: {} as { [key: string]: "favor" | "against" | "abstention" },
-    result: "",
-    date: "",
-    allVotes: [] as Array<{
-      favor: number;
-      against: number;
-      abstention: number;
-      parties: { [key: string]: "favor" | "against" | "abstention" };
-      result: string;
-      date: string;
-    }>
-  };
+
+// Process voting information
+const votesCounts = {
+  favor: 0,
+  against: 0,
+  abstention: 0,
+  parties: {} as { [key: string]: "favor" | "against" | "abstention" },
+  result: "",
+  date: "",
+  hasVotes: false,
+  allVotes: [] as Array<{
+    favor: number;
+    against: number;
+    abstention: number;
+    parties: { [key: string]: "favor" | "against" | "abstention" };
+    result: string;
+    date: string;
+  }>
+};
 
   if (proposal.votes && proposal.votes.length > 0) {
     // Get the most recent vote (assuming votes are ordered chronologically)
@@ -211,8 +205,7 @@ export function formatProposalData(proposal: Proposal): FormattedProposal {
     status: proposal.phases?.length ? proposal.phases[proposal.phases.length - 1].name : "Em Processamento",
     date: new Date(proposal.date).toLocaleDateString('pt-PT'),
     lastUpdate: mostRecentPhaseDate,
-    party: proposal.authors?.[0]?.party || "Desconhecido",
-    tags,
+    party: proposal.authors?.find(author => author.author_type === "Grupo")?.name || "Desconhecido",
     description: proposal.description || "Sem descrição disponível",
     authors,
     deputies,
