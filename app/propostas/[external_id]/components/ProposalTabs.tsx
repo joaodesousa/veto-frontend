@@ -41,7 +41,7 @@ interface ProposalTabsProps {
 export function ProposalTabs({ proposal }: ProposalTabsProps) {
   return (
     <>
-      <ProposalAbout description={proposal.description || 'Sem descrição disponível'} />
+      {/* <ProposalAbout description={proposal.description || 'Sem descrição disponível'} /> */}
 
       <Tabs defaultValue="timeline" className="mt-6">
         <TabsList className="grid w-full grid-cols-3">
@@ -55,7 +55,7 @@ export function ProposalTabs({ proposal }: ProposalTabsProps) {
         </TabsContent>
         
         <TabsContent value="voting" className="mt-4">
-          <ProposalVoting votes={proposal.votes} />
+          <ProposalVoting votes={{ ...proposal.votes, allVotes: [] }} />
         </TabsContent>
         
         <TabsContent value="documents" className="mt-4">

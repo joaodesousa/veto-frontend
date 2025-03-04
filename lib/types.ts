@@ -75,3 +75,28 @@ export interface Author {
     authors: Author[]; // Assuming Author is another interface
     link: string; // Add other properties as needed
   }
+
+  export interface DashboardStats {
+    total_proposals: number;
+    total_votes: number;
+    recent_votes: number;
+    recent_proposals: number;
+    proposals_this_year?: number;
+    proposals_by_party?: Record<string, number>;
+    party_with_most_proposals: string[];
+    proposals_count_for_party: number;
+  }
+
+  interface VoteRecord {
+    // Define the properties of VoteRecord as needed
+  }
+
+  interface VotesData {
+    favor: number;
+    against: number;
+    abstention: number;
+    parties: { [key: string]: "favor" | "against" | "abstention" };
+    allVotes: VoteRecord[];
+    result: string;
+    date: string;
+  }

@@ -83,7 +83,7 @@ export function ProposalSidebar({ proposal }: ProposalSidebarProps) {
         </CardContent>
       </Card>
 
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>Subscrever Atualizações</CardTitle>
         </CardHeader>
@@ -93,7 +93,7 @@ export function ProposalSidebar({ proposal }: ProposalSidebarProps) {
           </p>
           <Button className="w-full">Subscrever</Button>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   )
 }
