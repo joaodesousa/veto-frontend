@@ -9,7 +9,7 @@ export function Footer() {
           <div className="flex flex-col gap-2">
             <Link href="/" className="flex items-center gap-2">
               <Building2 className="h-6 w-6 text-primary" />
-              <span className="font-bold text-xl">Passos Perdidos</span>
+              <span className="font-bold text-xl">Veto</span>
             </Link>
             <p className="text-sm text-muted-foreground mt-2">
               Acompanhamento de propostas legislativas no Parlamento Português.
@@ -78,7 +78,7 @@ export function Footer() {
         </div>
         <div className="mt-8 border-t pt-6">
           <p className="text-center text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} Passos Perdidos. Todos os direitos reservados.
+            &copy; {new Date().getFullYear()} Veto. Todos os direitos reservados.
           </p>
         </div>
       </div>

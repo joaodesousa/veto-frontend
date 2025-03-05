@@ -234,7 +234,7 @@ export default function ComingSoonPage() {
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-2 mb-4">
               <Building2 className="h-8 w-8 text-primary" />
-              <span className="font-bold text-2xl">Passos Perdidos</span>
+              <span className="font-bold text-2xl">Veto</span>
             </div>
             <Badge
               variant="outline"
@@ -244,7 +244,7 @@ export default function ComingSoonPage() {
             </Badge>
             <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4">Em Breve</h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Estamos a redesenhar o Passos Perdidos para tornar o acompanhamento legislativo mais acessível, intuitivo
+              O <b>Passos Perdidos</b> agora é <b>Veto</b> para tornar o acompanhamento legislativo mais acessível, intuitivo
               e transparente.
             </p>
           </div>
@@ -254,7 +254,7 @@ export default function ComingSoonPage() {
               <div>
                 <h2 className="text-2xl font-semibold mb-4">Seja o primeiro a saber</h2>
                 <p className="text-muted-foreground mb-6">
-                  Deixe o seu email para ser notificado quando lançarmos a nova versão do Passos Perdidos.
+                  Deixe o seu email para ser notificado quando lançarmos a nova versão do Veto.
                 </p>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="flex flex-col sm:flex-row gap-2">
@@ -327,10 +327,10 @@ export default function ComingSoonPage() {
         <div className="container flex flex-col items-center justify-center gap-4 text-center">
           <div className="flex items-center gap-2">
             <Building2 className="h-5 w-5 text-primary" />
-            <span className="font-bold">Passos Perdidos</span>
+            <span className="font-bold">Veto</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} Passos Perdidos. Todos os direitos reservados.
+            &copy; {new Date().getFullYear()} Veto. Todos os direitos reservados.
           </p>
         </div>
       </footer>

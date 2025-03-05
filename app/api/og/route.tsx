@@ -7,7 +7,7 @@ export const runtime = 'edge';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const title = searchParams.get('title') || 'Passos Perdidos';
+    const title = searchParams.get('title') || 'Veto';
     const subtitle = searchParams.get('subtitle') || 'Iniciativa Legislativa';
     
     // Create the OpenGraph image
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
               fontWeight: "bold",
             }}
           >
-            Passos Perdidos
+            Veto
           </div>
       
         <div

@@ -9,7 +9,7 @@ import { Toaster } from "@/components/ui/toaster"
 
 
 export const metadata: Metadata = {
-  title: "Passos Perdidos | Acompanhamento Legislativo",
+  title: "Veto | Acompanhamento Legislativo",
   description: "Acompanhe propostas legislativas no Parlamento Português",
   generator: 'v0.dev'
 }

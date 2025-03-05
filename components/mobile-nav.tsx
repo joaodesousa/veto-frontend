@@ -25,7 +25,7 @@ export function MobileNav() {
         <div className="flex items-center gap-2 px-7">
           <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
             <Building2 className="h-6 w-6 text-primary" />
-            <span className="font-bold text-xl">Passos Perdidos</span>
+            <span className="font-bold text-xl">Veto</span>
           </Link>
         </div>
         <nav className="flex flex-col gap-4 px-7 mt-8">
