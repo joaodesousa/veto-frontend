@@ -39,27 +39,29 @@ export async function getProposalForId(externalId: string): Promise<Proposal | n
     const token = await getServerAuthToken();
     const API_BASE_URL = process.env.API_BASE_URL || 'https://legis.veto.pt';
     
-    // Make sure URL is properly encoded
-    const encodedId = encodeURIComponent(externalId);
-    const url = `${API_BASE_URL}/projetoslei?external_id=${encodedId}`;
+    // Use path parameter approach
+    const url = `${API_BASE_URL}/projetoslei/${encodeURIComponent(externalId)}/full_details/`;
 
     const response = await fetch(url, {
-      headers: { 'Authorization': `Bearer ${token}` },
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
       cache: 'no-store' // Prevent caching to ensure fresh data
     });
-    
+
     if (!response.ok) {
       console.error(`API error: ${response.status} - ${response.statusText}`);
       throw new Error(`API error: ${response.statusText}`);
     }
-    
+
     const data = await response.json();
-    
-    if (data.results && data.results.length > 0) {
-      return data.results[0] as Proposal;
-    }
-    
-    return null;
+
+    // Log the response to help diagnose any issues
+    console.log('Proposal API Response:', JSON.stringify(data, null, 2));
+
+    // Check if the response is the proposal directly
+    return data as Proposal;
   } catch (error) {
     console.error("Error fetching proposal:", error);
     return null;

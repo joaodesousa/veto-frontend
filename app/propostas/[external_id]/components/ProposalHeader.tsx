@@ -1,6 +1,6 @@
 import { Calendar, FileText, Users } from "lucide-react"
 import { getStatusColor } from "../../../utils/colors"
-import type { FormattedProposal } from "../../utils/formatters"
+import type { FormattedProposal } from "../../../../lib/types"
 
 interface ProposalTabsProps {
   proposal: FormattedProposal;
@@ -22,7 +22,6 @@ interface ProposalHeaderProps {
 }
 
 export function ProposalHeader({ proposal }: ProposalHeaderProps) {
-  // Extract the type from the proposal number (e.g., "PJL 121/XV/1" -> "PJL")
   const type = proposal.type || proposal.number.split(' ')[0];
   
   return (

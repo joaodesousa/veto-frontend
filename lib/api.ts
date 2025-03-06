@@ -139,9 +139,6 @@ export async function fetchTypes(): Promise<string[]> {
 }
 
 /**
- * Fetch available phases
- */
-/**
  * Fetch proposal phases
  */
 export async function fetchPhases(): Promise<string[]> {
@@ -299,19 +296,6 @@ export async function fetchProposals(params: {
     }
     if (params.dateRange?.to) {
       queryParams.append('end_date', format(params.dateRange.to, "yyyy-MM-dd"));
-    }
-
-    // Ordering
-    if (params.orderBy) {
-      switch (params.orderBy) {
-        case 'recentes':
-          queryParams.append('ordering', '-date');
-          break;
-        case 'antigos':
-          queryParams.append('ordering', 'date');
-          break;
-        // Add other ordering options as needed
-      }
     }
     
     const API_BASE_URL = 'https://legis.veto.pt';

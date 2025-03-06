@@ -1,25 +1,29 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+// app/propostas/[external_id]/components/ProposalTabs.tsx
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProposalAbout } from "./ProposalAbout"
 import { ProposalTimeline } from "./ProposalTimeline"
 import { ProposalVoting } from "./ProposalVoting"
 import { ProposalDocuments } from "./ProposalDocuments"
+import { Phase, TimelineItem } from "@/lib/types"
 
-// Define an interface for the proposal prop
-interface TimelineItem {
-  date: string;
-  title: string;
-  description: string;
-}
-
+// Define the types for the ProposalTabs component props
 interface VotesData {
   favor: number;
   against: number;
   abstention: number;
   parties: { [key: string]: "favor" | "against" | "abstention" };
-  allVotes: number;
+  allVotes: Array<{
+    favor: number;
+    against: number;
+    abstention: number;
+    parties: { [key: string]: "favor" | "against" | "abstention" };
+    result: string;
+    date: string;
+    description?: string;
+  }>;
   result: string;
   date: string;
+  hasVotes?: boolean;
 }
 
 interface DocumentItem {
@@ -32,8 +36,9 @@ interface DocumentItem {
 interface ProposalTabsProps {
   proposal: {
     description: string;
-    timeline: TimelineItem[];
-    votes: VotesData & { hasVotes?: boolean };
+    timeline?: TimelineItem[]; // Pre-processed timeline with subitems
+    phases?: Phase[];         // Raw phases data (optional)
+    votes: VotesData;
     documents: DocumentItem[];
   }
 }
@@ -41,8 +46,6 @@ interface ProposalTabsProps {
 export function ProposalTabs({ proposal }: ProposalTabsProps) {
   return (
     <>
-      {/* <ProposalAbout description={proposal.description || 'Sem descrição disponível'} /> */}
-
       <Tabs defaultValue="timeline" className="mt-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="timeline">Cronologia</TabsTrigger>
@@ -51,11 +54,14 @@ export function ProposalTabs({ proposal }: ProposalTabsProps) {
         </TabsList>
         
         <TabsContent value="timeline" className="mt-4">
-          <ProposalTimeline timeline={proposal.timeline} />
+          <ProposalTimeline 
+            timeline={proposal.timeline} 
+            phases={proposal.phases}
+          />
         </TabsContent>
         
         <TabsContent value="voting" className="mt-4">
-          <ProposalVoting votes={{ ...proposal.votes, allVotes: [] }} />
+          <ProposalVoting votes={proposal.votes} />
         </TabsContent>
         
         <TabsContent value="documents" className="mt-4">

@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils"
 
 
 export const metadata: Metadata = {
-  title: "Passos Perdidos | Acompanhamento Legislativo",
+  title: "Veto | Acompanhamento Legislativo",
   description: "Acompanhe propostas legislativas no Parlamento Português",
 }
 
@@ -19,13 +19,13 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt">
+    <html lang="pt" suppressHydrationWarning>
       <body className={cn("min-h-screen bg-background font-sans antialiased")}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <div className="relative flex min-h-screen flex-col">
-            <Header />
+            {/* <Header /> */}
             <main className="flex-1">{children}</main>
-            <Footer />
+            {/* <Footer /> */}
           </div>
         </ThemeProvider>
       </body>

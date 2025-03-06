@@ -1,19 +1,31 @@
+// app/propostas/[external_id]/components/ProposalTimeline.tsx
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Timeline, TimelineItem } from "@/components/timeline"
+import { Phase } from "@/lib/types"
+import { useProcessTimeline } from "@/hooks/ProcessTimeline"
 
-// Define the type for the timeline items
-interface TimelineItemType {
-  date: string;
-  title: string;
-  description?: string;
-}
-
-// Define the props type for the ProposalTimeline component
+// Interface for the component props
 interface ProposalTimelineProps {
-  timeline: TimelineItemType[];
+  timeline?: Array<{
+    date: string;
+    title: string;
+    description: string;
+    subitems?: Array<{
+      date: string;
+      title: string;
+      description: string;
+    }>;
+  }>;
+  phases?: Phase[];
 }
 
-export function ProposalTimeline({ timeline }: ProposalTimelineProps) {
+export function ProposalTimeline({ timeline, phases }: ProposalTimelineProps) {
+  // Use the hook to process phases if no timeline is provided
+  const processedTimeline = useProcessTimeline(phases);
+  
+  // Use provided timeline or processed timeline from phases
+  const displayTimeline = timeline || processedTimeline;
+  
   return (
     <Card>
       <CardHeader>
@@ -21,15 +33,16 @@ export function ProposalTimeline({ timeline }: ProposalTimelineProps) {
         <CardDescription>Acompanhe o percurso desta proposta legislativa</CardDescription>
       </CardHeader>
       <CardContent>
-        {timeline && timeline.length > 0 ? (
+        {displayTimeline && displayTimeline.length > 0 ? (
           <Timeline>
-            {timeline.map((item, index) => (
+            {displayTimeline.map((item, index) => (
               <TimelineItem
                 key={`${item.title}-${index}`}
                 date={item.date}
                 title={item.title}
-                description={item.description || ''}
-                isLast={index === timeline.length - 1}
+                description={item.description}
+                subitems={item.subitems}
+                isLast={index === displayTimeline.length - 1}
               />
             ))}
           </Timeline>

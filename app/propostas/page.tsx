@@ -35,7 +35,6 @@ export default function PropostasPage() {
   const [selectedPhases, setSelectedPhases] = useState<string[]>([])
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>([])
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
-  const [orderBy, setOrderBy] = useState("recentes")
   
   // Filter options data
   const [allTypes, setAllTypes] = useState<string[]>([])
@@ -126,8 +125,7 @@ export default function PropostasPage() {
           types: selectedTypes,
           phases: selectedPhases,
           authors: selectedAuthors,
-          dateRange,
-          orderBy
+          dateRange
         });
         
         setProposals(response.results);
@@ -151,7 +149,6 @@ export default function PropostasPage() {
     selectedPhases, 
     selectedAuthors, 
     dateRange, 
-    orderBy
   ]);
 
   // For subsequent loads after filter/page changes (only run if initial load is complete)
@@ -168,7 +165,6 @@ export default function PropostasPage() {
           phases: selectedPhases,
           authors: selectedAuthors,
           dateRange,
-          orderBy
         });
         
         setProposals(response.results);
@@ -189,8 +185,7 @@ export default function PropostasPage() {
     selectedTypes, 
     selectedPhases, 
     selectedAuthors, 
-    dateRange, 
-    orderBy
+    dateRange,
   ]);
   
 
@@ -224,7 +219,7 @@ export default function PropostasPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen pt-16">
       <div className="flex-1">
         {/* Header - Always visible */}
         <div className="border-b">

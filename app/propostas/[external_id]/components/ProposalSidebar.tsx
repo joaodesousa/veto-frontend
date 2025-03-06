@@ -1,9 +1,9 @@
-import { Users } from "lucide-react"
+import { Users, Bell } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { getStatusColor } from "../../utils/colors"
+import { getStatusColor } from "../../../utils/colors"
 
 // Define the type for the proposal object
 interface Deputy {
@@ -29,71 +29,73 @@ interface ProposalSidebarProps {
 }
 
 export function ProposalSidebar({ proposal }: ProposalSidebarProps) {
-  const statusColor = getStatusColor(proposal.status)
+  const statusColor = getStatusColor(proposal.status);
+  
+  // Get the next step (for display purposes)
+  const progressSteps = [
+    "Apresentação",
+    "Admissão",
+    "Discussão na Comissão",
+    "Audições Públicas",
+    "Em Análise",
+    "Votação na Especialidade",
+    "Votação Final Global",
+    "Promulgação",
+    "Publicação",
+  ];
+  
+  let currentStepIndex = 0;
+  if (proposal.timeline && proposal.timeline.length > 0) {
+    const lastPhaseTitle = proposal.timeline[proposal.timeline.length - 1].title;
+    const matchingIndex = progressSteps.findIndex(step => 
+      lastPhaseTitle.includes(step) || step.includes(lastPhaseTitle)
+    );
+    if (matchingIndex !== -1) {
+      currentStepIndex = matchingIndex;
+    }
+  }
+  
+  const nextStep = currentStepIndex < progressSteps.length - 1 
+    ? progressSteps[currentStepIndex + 1] 
+    : "Concluído";
   
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Estado Atual</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Estado:</span>
-              <Badge className={statusColor}>
+    <Card className="border-blue-100 dark:border-blue-800">
+      <CardHeader>
+        <CardTitle>Estado Atual</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Estado:</span>
+            <Badge className={statusColor}>
               {proposal.status}
-              </Badge>
-            </div>
-              <>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Última Atualização:</span>
-                  <span className="text-sm">{proposal.lastUpdate}</span>
-                </div>
-              </>
+            </Badge>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Fase Atual:</span>
+            <span className="text-sm">
+              {proposal.timeline && proposal.timeline.length > 0
+                ? proposal.timeline[proposal.timeline.length - 1].title
+                : "N/A"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Última Atualização:</span>
+            <span className="text-sm">{proposal.lastUpdate}</span>
+          </div>
+          <Separator />
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Próxima Etapa:</span>
+            <span className="text-sm">{nextStep}</span>
+          </div>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Deputados</CardTitle>
-          <CardDescription>Deputados que propuseram esta iniciativa</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {proposal.deputies.length > 0 ? (
-            <ul className="space-y-2">
-              {proposal.deputies.map((deputy, index) => (
-                <li key={`${deputy.name}-${index}`} className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Users className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span>{deputy.name}</span>
-                  </div>
-                  {deputy.party && (
-                    <Badge variant="outline" className="ml-2">
-                      {deputy.party}
-                    </Badge>
-                  )}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-muted-foreground">Não há informações sobre deputados disponíveis.</p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* <Card>
-        <CardHeader>
-          <CardTitle>Subscrever Atualizações</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Receba notificações sobre alterações nesta proposta legislativa.
-          </p>
-          <Button className="w-full">Subscrever</Button>
-        </CardContent>
-      </Card> */}
-    </div>
+        <Button className="w-full mt-4 gap-1.5">
+          <Bell className="h-4 w-4" />
+          Receber Notificações
+        </Button>
+      </CardContent>
+    </Card>
   )
 }
