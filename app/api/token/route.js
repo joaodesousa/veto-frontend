@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST() {
   try {
-    const API_BASE_URL = process.env.API_BASE_URL || 'https://legis.passosperdidos.pt';
+    const API_BASE_URL = process.env.API_BASE_URL || 'https://legis.veto.pt';
   
     const response = await fetch(`${API_BASE_URL}/api/token/`, {
       method: 'POST',

@@ -77,9 +77,30 @@ export default function PropostasPage() {
           fetchAuthors(),
         ]);
         
-        setAllTypes(typesData.filter((type: string) => type !== "Todos"));
-        setAllPhases(phasesData.filter((phase: string) => phase !== "Todas"));
-        setAllAuthors(authorsData);
+        // Safely handle types data - ensure it's an array
+        if (Array.isArray(typesData)) {
+          setAllTypes(typesData.filter((type) => type !== "Todos" && type !== null && type !== undefined));
+        } else {
+          console.warn("Types data is not an array:", typesData);
+          setAllTypes([]);
+        }
+        
+        // Safely handle phases data - ensure it's an array
+        if (Array.isArray(phasesData)) {
+          setAllPhases(phasesData.filter((phase) => phase !== "Todas" && phase !== null && phase !== undefined));
+        } else {
+          console.warn("Phases data is not an array:", phasesData);
+          setAllPhases([]);
+        }
+        
+        // Safely handle authors data - ensure it's an array
+        if (Array.isArray(authorsData)) {
+          setAllAuthors(authorsData);
+        } else {
+          console.warn("Authors data is not an array:", authorsData);
+          setAllAuthors([]);
+        }
+        
         setFilterDataReady(true);
       } catch (err) {
         setFilterOptionsError("Failed to load filter options");
@@ -172,6 +193,15 @@ export default function PropostasPage() {
     orderBy
   ]);
   
+
+  const handleFiltersChange = useCallback((types: string[], phases: string[], authors: string[], dateRangeValue: DateRange | undefined) => {
+    setSelectedTypes(types);
+    setSelectedPhases(phases);
+    setSelectedAuthors(authors);
+    setDateRange(dateRangeValue);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, []);
+
   // Function to remove a filter
   const removeFilter = (filterType: string, value: string) => {
     switch (filterType) {
@@ -179,7 +209,8 @@ export default function PropostasPage() {
         setSelectedTypes(prev => prev.filter(type => type !== value))
         break
       case 'phases':
-        setSelectedPhases(prev => prev.filter(phase => phase !== phase))
+        // Fixed bug: was using phase variable instead of value
+        setSelectedPhases(prev => prev.filter(phase => phase !== value))
         break
       case 'authors':
         setSelectedAuthors(prev => prev.filter(author => author !== value))
@@ -267,21 +298,13 @@ export default function PropostasPage() {
                     allTypes={allTypes}
                     allPhases={allPhases}
                     allAuthors={allAuthors}
-                    onFiltersChange={(types, phases, authors, dateRange) => {
-                      setSelectedTypes(types);
-                      setSelectedPhases(phases);
-                      setSelectedAuthors(authors);
-                      setDateRange(dateRange);
-                      setCurrentPage(1); // Reset to first page when filters change
-                    }}
+                    onFiltersChange={handleFiltersChange}
                   />
                 )}
               </div>
 
               {/* Proposals Grid - Shows skeletons while loading */}
               <div className="space-y-6">
-                {/* Active Filters */}
-                
                 {/* Results Count - Shows skeleton while loading */}
                 <div className="text-sm text-muted-foreground">
                   {loading ? (
@@ -300,17 +323,50 @@ export default function PropostasPage() {
                   </div>
                 ) : proposals.length > 0 ? (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {proposals.map((proposal) => (
-                      <ProposalCard
-                        key={proposal.id}
-                        title={proposal.title}
-                        number={proposal.external_id}
-                        status={proposal.phases[proposal.phases.length - 1]?.name || 'Sem estado'}
-                        date={proposal.date}
-                        party={proposal.authors?.find(a => a.author_type === "Grupo")?.name || proposal.authors?.find(a => a.author_type === "Outro")?.name || "Desconhecido"}
-                        type={proposal.type}
-                      />
-                    ))}
+                    {proposals.map((proposal) => {
+                      // Safely extract the latest phase name
+                      const latestPhase = proposal.phases && Array.isArray(proposal.phases) && proposal.phases.length > 0
+                        ? proposal.phases[proposal.phases.length - 1]
+                        : null;
+                      
+                      const phaseDisplay = latestPhase 
+                        ? (typeof latestPhase === 'string' ? latestPhase : (latestPhase.name || 'Sem estado'))
+                        : 'Sem estado';
+                      
+                      // Safely extract the party/author
+                      let partyDisplay = "Desconhecido";
+                      if (proposal.authors && Array.isArray(proposal.authors)) {
+                        // First try to find a "Grupo" type author
+                        const partyAuthor = proposal.authors.find(a => 
+                          a && typeof a === 'object' && a.author_type === "Grupo"
+                        );
+                        
+                        if (partyAuthor) {
+                          partyDisplay = typeof partyAuthor.name === 'string' ? partyAuthor.name : "Desconhecido";
+                        } else {
+                          // If no party, try to find "Outro" type
+                          const otherAuthor = proposal.authors.find(a => 
+                            a && typeof a === 'object' && a.author_type === "Outro"
+                          );
+                          
+                          if (otherAuthor) {
+                            partyDisplay = typeof otherAuthor.name === 'string' ? otherAuthor.name : "Desconhecido";
+                          }
+                        }
+                      }
+                      
+                      return (
+                        <ProposalCard
+                          key={proposal.id}
+                          title={proposal.title}
+                          number={proposal.external_id}
+                          status={phaseDisplay}
+                          date={proposal.date}
+                          party={partyDisplay}
+                          type={proposal.type}
+                        />
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-center text-muted-foreground py-8">

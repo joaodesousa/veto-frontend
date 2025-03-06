@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Calendar } from "lucide-react"
 import type { DateRange } from "react-day-picker"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -15,8 +15,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Author } from "@/lib/types"
 
 interface ProposalFiltersProps {
-  allTypes: string[];
-  allPhases: string[];
+  allTypes: string[] | any[];
+  allPhases: string[] | any[];
   allAuthors: Author[];
   onFiltersChange: (
     types: string[], 
@@ -38,17 +38,83 @@ export function ProposalFilters({
   const [selectedTopics, setSelectedTopics] = React.useState<string[]>([]);
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>(undefined);
   
+  // Flag to avoid the initial onFiltersChange call
+  const isInitialMount = useRef(true);
+  
+  // Helper function to extract display name from phase objects
+  const extractPhaseName = (phase: any): string => {
+    if (typeof phase === 'string') {
+      return phase;
+    }
+    
+    if (phase && typeof phase === 'object') {
+      // Try name first as most likely property
+      if (phase.name && typeof phase.name === 'string') {
+        return phase.name;
+      }
+      
+      // Try other possible properties
+      for (const key of ['phase', 'title', 'label', 'description', 'value']) {
+        if (phase[key] && typeof phase[key] === 'string') {
+          return phase[key];
+        }
+      }
+      
+      // Fallback to a default string
+      return `Fase ${phase.id || ''}`;
+    }
+    
+    // Fallback for null/undefined
+    return String(phase || '');
+  };
+  
+  // Helper function to extract display name from type objects
+  const extractTypeName = (type: any): string => {
+    if (typeof type === 'string') {
+      return type;
+    }
+    
+    if (type && typeof type === 'object') {
+      // Try common properties for type name
+      for (const key of ['name', 'type', 'title', 'label', 'description', 'value']) {
+        if (type[key] && typeof type[key] === 'string') {
+          return type[key];
+        }
+      }
+      
+      // Fallback to a default string
+      return `Tipo ${type.id || ''}`;
+    }
+    
+    // Fallback for null/undefined
+    return String(type || '');
+  };
+  
   // Extract only parties (groups) from authors
   const partyNames = React.useMemo(() => {
     // Filter authors to only include those of type "Grupo" (parties)
-    const partyAuthors = allAuthors.filter(author => author.author_type === "Grupo");
-    const names = partyAuthors.map(author => author.name);
+    const partyAuthors = allAuthors.filter(author => 
+      author && typeof author === 'object' && author.author_type === "Grupo"
+    );
+    
+    // Extract name property from each party author
+    const names = partyAuthors.map(author => 
+      typeof author.name === 'string' ? author.name : `Unknown Party ${author.id || ''}`
+    );
+    
     // Remove duplicates
     return [...new Set(names)];
   }, [allAuthors]);
 
   // Apply filters when they change
   React.useEffect(() => {
+    // Skip the first render to avoid potential initial infinite loops
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    
+    // Only call with the raw values - no processing that could trigger new renders
     onFiltersChange(
       selectedTopics,
       selectedPhases,
@@ -56,6 +122,31 @@ export function ProposalFilters({
       dateRange
     );
   }, [selectedPhases, selectedParties, selectedTopics, dateRange, onFiltersChange]);
+
+  // Handler functions for updating filters - these explicitly set state
+  const handleTopicChange = (topic: string, checked: boolean) => {
+    if (checked) {
+      setSelectedTopics(prev => [...prev, topic]);
+    } else {
+      setSelectedTopics(prev => prev.filter(t => t !== topic));
+    }
+  };
+  
+  const handlePhaseChange = (phase: string, checked: boolean) => {
+    if (checked) {
+      setSelectedPhases(prev => [...prev, phase]);
+    } else {
+      setSelectedPhases(prev => prev.filter(p => p !== phase));
+    }
+  };
+  
+  const handlePartyChange = (party: string, checked: boolean) => {
+    if (checked) {
+      setSelectedParties(prev => [...prev, party]);
+    } else {
+      setSelectedParties(prev => prev.filter(p => p !== party));
+    }
+  };
 
   // Clear filters functionality
   const clearPhases = () => setSelectedPhases([]);
@@ -96,27 +187,33 @@ export function ProposalFilters({
         </div>
         <ScrollArea className="h-[200px] pr-4">
           <div className="space-y-3">
-            {allTypes.map((topic, index) => (
-              <div key={`topic-${index}`} className="flex items-center space-x-2">
-                <Checkbox 
-                  id={`topic-${index}`} 
-                  checked={selectedTopics.includes(topic)}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setSelectedTopics([...selectedTopics, topic]);
-                    } else {
-                      setSelectedTopics(selectedTopics.filter(t => t !== topic));
-                    }
-                  }}
-                />
-                <label
-                  htmlFor={`topic-${index}`}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {topic}
-                </label>
-              </div>
-            ))}
+            {Array.isArray(allTypes) && allTypes.map((topic, index) => {
+              // Extract the display name from the topic
+              const topicStr = extractTypeName(topic);
+              
+              // Create a unique key for this topic
+              const topicKey = typeof topic === 'object' && topic.id ? 
+                String(topic.id) : 
+                (typeof topic === 'string' ? topic : `topic-${index}`);
+              
+              return (
+                <div key={`topic-${topicKey}`} className="flex items-center space-x-2">
+                  <Checkbox 
+                    id={`topic-${index}`} 
+                    checked={selectedTopics.includes(topicStr)}
+                    onCheckedChange={(checked) => {
+                      handleTopicChange(topicStr, !!checked);
+                    }}
+                  />
+                  <label
+                    htmlFor={`topic-${index}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {topicStr}
+                  </label>
+                </div>
+              );
+            })}
           </div>
         </ScrollArea>
       </div>
@@ -140,27 +237,33 @@ export function ProposalFilters({
         </div>
         <ScrollArea className="h-[200px] pr-4">
           <div className="space-y-3">
-            {allPhases.map((phase, index) => (
-              <div key={`phase-${index}`} className="flex items-center space-x-2">
-                <Checkbox 
-                  id={`phase-${index}`} 
-                  checked={selectedPhases.includes(phase)}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setSelectedPhases([...selectedPhases, phase]);
-                    } else {
-                      setSelectedPhases(selectedPhases.filter(p => p !== phase));
-                    }
-                  }}
-                />
-                <label
-                  htmlFor={`phase-${index}`}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {phase}
-                </label>
-              </div>
-            ))}
+            {Array.isArray(allPhases) && allPhases.map((phase, index) => {
+              // Extract the display name from the phase
+              const phaseStr = extractPhaseName(phase);
+              
+              // Create a unique key for this phase
+              const phaseKey = typeof phase === 'object' && phase.id ? 
+                String(phase.id) : 
+                (typeof phase === 'string' ? phase : `phase-${index}`);
+              
+              return (
+                <div key={`phase-${phaseKey}`} className="flex items-center space-x-2">
+                  <Checkbox 
+                    id={`phase-${index}`} 
+                    checked={selectedPhases.includes(phaseStr)}
+                    onCheckedChange={(checked) => {
+                      handlePhaseChange(phaseStr, !!checked);
+                    }}
+                  />
+                  <label
+                    htmlFor={`phase-${index}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {phaseStr}
+                  </label>
+                </div>
+              );
+            })}
           </div>
         </ScrollArea>
       </div>
@@ -186,27 +289,28 @@ export function ProposalFilters({
           <ScrollArea className="h-[200px] pr-4">
             <div className="space-y-3">
               {partyNames.length > 0 ? (
-                partyNames.map((party, index) => (
-                  <div key={`party-${index}`} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`party-${index}`} 
-                      checked={selectedParties.includes(party)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedParties([...selectedParties, party]);
-                        } else {
-                          setSelectedParties(selectedParties.filter(p => p !== party));
-                        }
-                      }}
-                    />
-                    <label
-                      htmlFor={`party-${index}`}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      {party}
-                    </label>
-                  </div>
-                ))
+                partyNames.map((party, index) => {
+                  // Ensure party is a string
+                  const partyStr = typeof party === 'string' ? party : String(party);
+                  
+                  return (
+                    <div key={`party-${index}`} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`party-${index}`} 
+                        checked={selectedParties.includes(partyStr)}
+                        onCheckedChange={(checked) => {
+                          handlePartyChange(partyStr, !!checked);
+                        }}
+                      />
+                      <label
+                        htmlFor={`party-${index}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        {partyStr}
+                      </label>
+                    </div>
+                  );
+                })
               ) : (
                 <div className="text-center py-6 text-sm text-muted-foreground">
                   Nenhum partido encontrado

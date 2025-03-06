@@ -11,7 +11,7 @@ export function Header() {
         <div className="flex items-center gap-2">
           <Link href="/" className="flex items-center gap-2">
             <Building2 className="h-6 w-6 text-primary" />
-            <span className="hidden font-bold text-xl sm:inline-block">Veto</span>
+            <span className="hidden font-bold text-xl sm:inline-block">Passos Perdidos</span>
           </Link>
         </div>
         <nav className="hidden md:flex items-center gap-6">

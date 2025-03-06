@@ -5,13 +5,12 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { cn } from "@/lib/utils"
-import { Toaster } from "@/components/ui/toaster"
+
 
 
 export const metadata: Metadata = {
-  title: "Veto | Acompanhamento Legislativo",
+  title: "Passos Perdidos | Acompanhamento Legislativo",
   description: "Acompanhe propostas legislativas no Parlamento Português",
-  generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -20,13 +19,17 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt" suppressHydrationWarning>
+    <html lang="pt">
       <body className={cn("min-h-screen bg-background font-sans antialiased")}>
-      {children}
-      <Toaster />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <div className="relative flex min-h-screen flex-col">
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   )
 }
 
-import './globals.css'

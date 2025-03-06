@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: { external_id: stri
     description: proposal.description || 'Sem descrição disponível',
     openGraph: {
       images: [{
-        url: `/api/og?title=${encodeURIComponent(proposal.title)}&subtitle=${encodeURIComponent(`${proposal.type} ${proposal.external_id}`)}`,
+        url: `/api/og?title=${encodeURIComponent(proposal.title)}&subtitle=${encodeURIComponent(`${proposal.type}`)}`,
         width: 1200,
         height: 630,
       }]
@@ -34,20 +34,17 @@ export async function generateMetadata({ params }: { params: { external_id: stri
 }
 
 export default async function ProposalDetailPage({ params }: { params: { external_id: string } }) {
-  // Add some console logging to debug
-  console.log(`Fetching proposal with ID: ${params.external_id}`);
+
   
   try {
     const proposal = await getProposalForId(params.external_id)
     
     if (!proposal) {
-      console.log(`Proposal not found: ${params.external_id}`);
       notFound()
     }
 
     // Format the proposal data for the UI
     const formattedProposal = formatProposalData(proposal)
-    console.log(`Successfully loaded proposal: ${formattedProposal.number}`);
 
     return (
       <div className="container py-8">

@@ -7,7 +7,7 @@ import { Proposal, ApiResponse, DashboardStats } from './types';
  */
 export async function getServerAuthToken() {
   try {
-    const API_BASE_URL = process.env.API_BASE_URL || 'https://legis.passosperdidos.pt';
+    const API_BASE_URL = process.env.API_BASE_URL || 'https://legis.veto.pt';
     
     const response = await fetch(`${API_BASE_URL}/api/token/`, {
       method: 'POST',
@@ -37,14 +37,12 @@ export async function getServerAuthToken() {
 export async function getProposalForId(externalId: string): Promise<Proposal | null> {
   try {
     const token = await getServerAuthToken();
-    const API_BASE_URL = process.env.API_BASE_URL || 'https://legis.passosperdidos.pt';
+    const API_BASE_URL = process.env.API_BASE_URL || 'https://legis.veto.pt';
     
     // Make sure URL is properly encoded
     const encodedId = encodeURIComponent(externalId);
     const url = `${API_BASE_URL}/projetoslei?external_id=${encodedId}`;
-    
-    console.log(`Fetching proposal from: ${url}`);
-    
+
     const response = await fetch(url, {
       headers: { 'Authorization': `Bearer ${token}` },
       cache: 'no-store' // Prevent caching to ensure fresh data
@@ -74,11 +72,10 @@ export async function getProposalForId(externalId: string): Promise<Proposal | n
 export async function getHomePageProposals(limit: number = 4): Promise<{ proposals: Proposal[], totalCount: number }> {
   try {
     const token = await getServerAuthToken();
-    const API_BASE_URL = process.env.API_BASE_URL || 'https://legis.passosperdidos.pt';
+    const API_BASE_URL = process.env.API_BASE_URL || 'https://legis.veto.pt';
     
     const url = `${API_BASE_URL}/projetoslei/`;
     
-    console.log(`Fetching homepage proposals from: ${url}`);
     
     const response = await fetch(url, {
       headers: { 'Authorization': `Bearer ${token}` },
@@ -108,10 +105,9 @@ export async function getHomePageProposals(limit: number = 4): Promise<{ proposa
 export async function getDashboardStatistics(): Promise<DashboardStats> {
   try {
     const token = await getServerAuthToken();
-    const API_BASE_URL = process.env.API_BASE_URL || 'https://legis.passosperdidos.pt';
-    const url = `${API_BASE_URL}/dashboard-statistics/`;
+    const API_BASE_URL = process.env.API_BASE_URL || 'https://legis.veto.pt';
+    const url = `${API_BASE_URL}/dashboard/`;
     
-    console.log(`Fetching dashboard statistics from: ${url}`);
     
     const response = await fetch(url, {
       headers: { 'Authorization': `Bearer ${token}` },

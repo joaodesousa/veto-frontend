@@ -70,10 +70,9 @@ export async function fetchItems(params: {
       queryParams.append('end_date', format(params.dateRange.to, "yyyy-MM-dd"));
     }
 
-    const API_BASE_URL = 'https://legis.passosperdidos.pt';
+    const API_BASE_URL = 'https://legis.veto.pt';
     const url = `${API_BASE_URL}/projetoslei/?${queryParams.toString()}`;
     
-    console.log(`Fetching items from: ${url}`);
     
     const response: Response = await fetch(url, {
       headers: { 
@@ -100,11 +99,39 @@ export async function fetchItems(params: {
  */
 export async function fetchTypes(): Promise<string[]> {
   try {
-    const response: Response = await fetch(`https://legis.passosperdidos.pt/types/`);
+    const token = await getAuthToken();
+    
+    // Make a request to fetch types
+    const response: Response = await fetch('https://legis.veto.pt/types/', {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    
     if (!response.ok) {
       throw new Error(`API error: ${response.statusText}`);
     }
-    return response.json();
+    
+    // Log the actual response to debug
+    const data = await response.json();
+    
+    // Check the structure of the response
+    if (Array.isArray(data)) {
+      // If it's directly an array, return it
+      return data;
+    } else if (data && typeof data === 'object') {
+      // If it's an object, see if it has a results property
+      if (Array.isArray(data.results)) {
+        return data.results;
+      }
+      
+      // If it's an object with type names as keys or values
+      if (Object.values(data).every(value => typeof value === 'string')) {
+        return Object.values(data);
+      }
+    }
+    
+    // If we can't determine the structure, log an error and return an empty array
+    console.error("Unexpected types data structure:", data);
+    return [];
   } catch (error) {
     console.error("Error fetching types:", error);
     throw error;
@@ -114,13 +141,85 @@ export async function fetchTypes(): Promise<string[]> {
 /**
  * Fetch available phases
  */
+/**
+ * Fetch proposal phases
+ */
 export async function fetchPhases(): Promise<string[]> {
   try {
-    const response: Response = await fetch(`https://legis.passosperdidos.pt/phases/`);
+    const token = await getAuthToken();
+    
+    // Make a request to fetch phases
+    const response: Response = await fetch('https://legis.veto.pt/phases-unique/', {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    
     if (!response.ok) {
       throw new Error(`API error: ${response.statusText}`);
     }
-    return response.json();
+    
+    // Log the actual response to debug
+    const data = await response.json();
+    // If the data is directly an array
+    if (Array.isArray(data)) {
+      // If array contains strings, return it
+      if (data.every(item => typeof item === 'string')) {
+        return data;
+      }
+      
+      // If array contains objects with a name property
+      if (data.every(item => item && typeof item === 'object')) {
+        // Try to find the correct property that contains the phase name
+        // by checking the first item
+        const firstItem = data[0];
+        if (firstItem.name && typeof firstItem.name === 'string') {
+          // If items have a name property, use that
+          return data.map(item => item.name);
+        } 
+        
+        // Check for common keys that might contain the name
+        for (const key of ['name', 'phase', 'title', 'label', 'description']) {
+          if (firstItem[key] && typeof firstItem[key] === 'string') {
+            return data.map(item => item[key]);
+          }
+        }
+        
+        // If we can't find a good string property, stringify the whole object for debugging
+        console.warn("Phase objects don't have a clear string property to use:", firstItem);
+        return data.map(item => JSON.stringify(item));
+      }
+    } 
+    
+    // If data is an object with a results array
+    if (data && typeof data === 'object' && Array.isArray(data.results)) {
+      // Apply the same logic to data.results
+      const results = data.results;
+      
+      if (results.every(item => typeof item === 'string')) {
+        return results;
+      }
+      
+      if (results.every(item => item && typeof item === 'object')) {
+        const firstItem = results[0];
+        if (firstItem.name && typeof firstItem.name === 'string') {
+          return results.map((item: { name: string }) => item.name);
+        }
+        
+        for (const key of ['name', 'phase', 'title', 'label', 'description']) {
+          if (firstItem[key] && typeof firstItem[key] === 'string') {
+            return results.map((item: { [key: string]: string }) => item[key]);
+          }
+        }
+        
+        console.warn("Phase result objects don't have a clear string property:", firstItem);
+        return results.map((item: any) => JSON.stringify(item));
+      }
+    }
+    
+    // If we can't determine a good structure, log an error
+    console.error("Unexpected phases data structure:", data);
+    
+    // As a last resort, return an empty array
+    return [];
   } catch (error) {
     console.error("Error fetching phases:", error);
     throw error;
@@ -133,26 +232,20 @@ export async function fetchPhases(): Promise<string[]> {
 export async function fetchAuthors(): Promise<Author[]> {
   try {
     const token = await getAuthToken();
-    let allAuthors: Author[] = [];
-    let nextPage: string | null = 'https://legis.passosperdidos.pt/authors/';
     
-    // Fetch all pages of authors
-    while (nextPage) {
-      const response: Response = await fetch(nextPage, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API error: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      allAuthors = [...allAuthors, ...data.results];
-      
-      nextPage = data.next;
+    // Since there's no pagination, we just need to fetch once
+    const response: Response = await fetch('https://legis.veto.pt/authors/party_groups/', {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.statusText}`);
     }
     
-    return allAuthors;
+    // The response is directly an array of authors
+    const authors: Author[] = await response.json();
+    
+    return authors;
   } catch (error) {
     console.error("Error fetching authors:", error);
     throw error;
@@ -221,10 +314,10 @@ export async function fetchProposals(params: {
       }
     }
     
-    const API_BASE_URL = 'https://legis.passosperdidos.pt';
+    const API_BASE_URL = 'https://legis.veto.pt';
     const url = `${API_BASE_URL}/projetoslei/?${queryParams.toString()}`;
     
-    console.log(`Fetching proposals from: ${url}`);
+
     
     const response: Response = await fetch(url, {
       headers: { 

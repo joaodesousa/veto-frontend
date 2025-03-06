@@ -6,8 +6,13 @@ import { Building2, Menu } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { cn } from "@/lib/utils"
 
-export function MobileNav() {
+interface MobileNavProps {
+  isTransparent?: boolean
+}
+
+export function MobileNav({ isTransparent = false }: MobileNavProps) {
   const [open, setOpen] = React.useState(false)
 
   return (
@@ -15,7 +20,10 @@ export function MobileNav() {
       <SheetTrigger asChild>
         <Button
           variant="ghost"
-          className="mr-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden"
+          className={cn(
+            "mr-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden",
+            isTransparent && "text-white hover:text-white/80",
+          )}
         >
           <Menu className="h-6 w-6" />
           <span className="sr-only">Abrir menu</span>
@@ -25,7 +33,7 @@ export function MobileNav() {
         <div className="flex items-center gap-2 px-7">
           <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
             <Building2 className="h-6 w-6 text-primary" />
-            <span className="font-bold text-xl">Veto</span>
+            <span className="font-bold text-xl">VETO</span>
           </Link>
         </div>
         <nav className="flex flex-col gap-4 px-7 mt-8">

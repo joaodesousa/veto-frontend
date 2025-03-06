@@ -1,9 +1,10 @@
 // types.ts
 
 export interface Author {
-    name: string
-    party: string | null
-    author_type: string
+    id: string
+    name?: string
+    party?: string | null
+    author_type?: string
   }
   
   export interface Phase {
