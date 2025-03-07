@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Separator } from "@/components/ui/separator"
+import { toast } from "sonner"
+
 
 interface MobileSidebarNavProps {
   isTransparent?: boolean
@@ -88,7 +90,17 @@ export function MobileSidebarNav({ isTransparent = false }: MobileSidebarNavProp
                 <ThemeToggle />
               </div>
               <Separator />
-              <Button className="w-full gap-2">
+              <Button
+              onClick={() =>
+                toast("Brevemente.", {
+                  description: "Ainda estamos a trabalhar nesta funcionalidade.",
+                  action: {
+                    label: "Fechar",
+                    onClick: () => console.log("Undo"),
+                  },
+                })
+              }
+              className="w-full gap-2">
                 <LogIn className="h-4 w-4" />
                 Entrar
               </Button>
