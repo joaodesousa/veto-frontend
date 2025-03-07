@@ -141,16 +141,20 @@ export default async function ProposalDetailPage({ params }: { params: { externa
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-800 dark:to-blue-900 text-white pt-16">
           <div className="container py-8 md:py-12">
             {/* Breadcrumb */}
-            <div className="flex items-center gap-1 text-sm text-white/80 mb-6">
-              <Link href="/" className="hover:text-white">
+            <div className="flex items-center gap-1 text-sm text-white/80 mb-6 overflow-hidden">
+              <Link href="/" className="hover:text-white whitespace-nowrap">
                 Início
               </Link>
-              <ChevronRight className="h-4 w-4" />
-              <Link href="/propostas" className="hover:text-white">
+              <ChevronRight className="h-4 w-4 shrink-0" />
+              <Link href="/propostas" className="hover:text-white whitespace-nowrap">
                 Propostas
               </Link>
-              <ChevronRight className="h-4 w-4" />
-              <span className="text-white font-medium">{formattedProposal.title}</span>
+              <ChevronRight className="h-4 w-4 shrink-0" />
+              <span 
+                className="text-white font-medium truncate max-w-[50vw] block whitespace-nowrap overflow-hidden text-ellipsis"
+              >
+                {formattedProposal.title}
+              </span>
             </div>
 
             <div className="flex flex-col gap-4">
