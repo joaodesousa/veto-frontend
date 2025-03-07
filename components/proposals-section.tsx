@@ -20,7 +20,7 @@ export function ProposalsSection({ proposals }: ProposalsSectionProps) {
               Encontre Propostas Legislativas
             </h2>
             <p className="max-w-[700px] text-gray-400 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-              Pesquise e filtre propostas por tema, estado, partido ou data
+              Pesquise e filtre propostas partido, estado ou data
             </p>
           </div>
         </div>

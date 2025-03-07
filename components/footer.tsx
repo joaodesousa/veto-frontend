@@ -23,7 +23,7 @@ export function Footer() {
                   Propostas
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link href="/deputados" className="text-muted-foreground hover:text-primary transition-colors">
                   Deputados
                 </Link>
@@ -32,7 +32,7 @@ export function Footer() {
                 <Link href="/estatisticas" className="text-muted-foreground hover:text-primary transition-colors">
                   Estatísticas
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link href="/sobre" className="text-muted-foreground hover:text-primary transition-colors">
                   Sobre
@@ -40,7 +40,7 @@ export function Footer() {
               </li>
             </ul>
           </div>
-          <div>
+         {/*  <div>
             <h3 className="text-sm font-semibold mb-3">Recursos</h3>
             <ul className="space-y-2 text-sm">
               <li>
@@ -52,7 +52,7 @@ export function Footer() {
                 <Link href="/faq" className="text-muted-foreground hover:text-primary transition-colors">
                   FAQ
                 </Link>
-              </li>
+              </li> 
               <li>
                 <Link href="/contacto" className="text-muted-foreground hover:text-primary transition-colors">
                   Contacto
@@ -74,7 +74,7 @@ export function Footer() {
                 </Link>
               </li>
             </ul>
-          </div>
+          </div>*/}
         </div>
         <div className="mt-8 border-t pt-6">
           <p className="text-center text-sm text-muted-foreground">

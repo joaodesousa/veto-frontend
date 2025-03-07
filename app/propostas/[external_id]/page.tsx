@@ -29,6 +29,7 @@ import { ProposalTabs } from "./components/ProposalTabs"
 import { ProposalSidebar } from "./components/ProposalSidebar"
 import { CopyUrlButton } from "./components/CopyUrl"
 import { ProposalRelated } from "./components/ProposalRelated"
+import { SocialShareCard } from "./components/SocialShareCard"
 
 export async function generateMetadata({ params }: { params: { external_id: string } }) {
   const proposal = await getProposalForId(params.external_id)
@@ -111,7 +112,28 @@ export default async function ProposalDetailPage({ params }: { params: { externa
       comments: 32,
     }
 
+    const partyDisplay = (() => {
+      if (proposal.authors && Array.isArray(proposal.authors)) {
+        // First try to find a "Grupo" type author
+        const partyAuthor = proposal.authors.find(a => 
+          a && typeof a === 'object' && a.author_type === "Grupo"
+        );
 
+        if (partyAuthor) {
+          return typeof partyAuthor.name === 'string' ? partyAuthor.name : "Desconhecido";
+        } else {
+          // If no party, try to find "Outro" type
+          const otherAuthor = proposal.authors.find(a => 
+            a && typeof a === 'object' && a.author_type === "Outro"
+          );
+
+          if (otherAuthor) {
+            return typeof otherAuthor.name === 'string' ? otherAuthor.name : "Desconhecido";
+          }
+        }
+      }
+      return "Desconhecido"; // Fallback if no authors found
+    })();
 
     return (
       <div className="min-h-screen pb-16">
@@ -135,7 +157,7 @@ export default async function ProposalDetailPage({ params }: { params: { externa
               <div className="flex flex-wrap gap-2">
                 <Badge className="bg-blue-500 hover:bg-blue-400 text-white">{formattedProposal.status}</Badge>
                 <Badge variant="outline" className="border-white/30 text-white hover:bg-white/10">
-                  {formattedProposal.party}
+                  {partyDisplay}
                 </Badge>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold">{formattedProposal.title}</h1>
@@ -237,7 +259,7 @@ export default async function ProposalDetailPage({ params }: { params: { externa
             {/* Left Column */}
             <div className="lg:col-span-2 space-y-8">
               {/* Summary Card */}
-              <Card className="border-blue-100 dark:border-blue-800 shadow-sm">
+              {/* <Card className="border-blue-100 dark:border-blue-800 shadow-sm">
                 <CardHeader className="pb-2 bg-blue-50/50 dark:bg-blue-950/50">
                   <CardTitle className="flex items-center gap-2">
                     <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -247,7 +269,7 @@ export default async function ProposalDetailPage({ params }: { params: { externa
                 <CardContent className="pt-4">
                   <p className="text-muted-foreground leading-relaxed">{formattedProposal.description}</p>
                 </CardContent>
-              </Card>
+              </Card> */}
 
               {/* Main Content Tabs */}
               <ProposalTabs proposal={formattedProposal} />
@@ -264,36 +286,10 @@ export default async function ProposalDetailPage({ params }: { params: { externa
               )}
 
               {/* Share Card - Updated with copy functionality */}
-              <Card className="border-blue-100 dark:border-blue-800">
-                <CardHeader>
-                  <CardTitle>Partilhar</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Partilhe esta proposta com os seus amigos e colegas.
-                  </p>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      Twitter
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
-                      Facebook
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
-                      Email
-                    </Button>
-                  </div>
-                  <div className="mt-4 p-2 bg-muted rounded-md flex items-center">
-                    <input
-                      type="text"
-                      value={`https://veto.pt/propostas/${formattedProposal.id}`}
-                      readOnly
-                      className="bg-transparent border-none text-xs flex-1 focus:outline-none"
-                    />
-                    <CopyUrlButton url={`https://veto.pt/propostas/${formattedProposal.id}`} />
-                  </div>
-                </CardContent>
-              </Card>
+              <SocialShareCard 
+                url={`https://veto.pt/propostas/${formattedProposal.id}`}
+                title={formattedProposal.title}
+              />
             </div>
           </div>
         </div>

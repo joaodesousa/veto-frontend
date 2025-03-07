@@ -20,7 +20,7 @@ export function ProposalCard({ title, number, status, date, party, type }: Propo
   const displayParty = party
 
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-md animate-in">
+    <Card className="overflow-hidden transition-all hover:shadow-md animate-in flex flex-col h-full">
       <CardHeader className="p-4 pb-0 flex flex-row justify-between items-start">
         <div className="flex flex-col">
           <div className="flex flex-wrap gap-2 mb-2">
@@ -34,7 +34,7 @@ export function ProposalCard({ title, number, status, date, party, type }: Propo
           <h3 className="text-lg font-semibold">{title}</h3>
         </div>
       </CardHeader>
-      <CardContent className="p-4 pt-2">
+      <CardContent className="p-4 pt-2 flex-1">
         <div className="flex flex-col gap-2">
           <div className="flex items-center text-sm text-muted-foreground">
             <FileText className="mr-1 h-4 w-4" />
@@ -46,7 +46,7 @@ export function ProposalCard({ title, number, status, date, party, type }: Propo
           </div>
         </div>
       </CardContent>
-      <CardFooter className="p-4 pt-0">
+      <CardFooter className="p-4 pt-0 mt-auto">
         <Button variant="ghost" size="sm" className="gap-1 ml-auto" asChild>
           <a href={`/propostas/${number}`}>
             Ver detalhes

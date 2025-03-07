@@ -101,6 +101,7 @@ export interface Proposal {
   publication_url: string | null;
   publication_date: string | null;
   related_proposals?: RelatedProposal[]; // Raw API field name (typically snake_case)
+  text_link: string | null;
 }
 
 export interface FormattedProposal {
@@ -128,7 +129,8 @@ export interface FormattedProposal {
   };
   documents: Document[];
   phases: Phase[];
-  relatedProposals?: RelatedProposal[]; // Properly defined for the formatted proposal
+  relatedProposals?: RelatedProposal[];
+  textLink: string | null; // Add this new field
 }
 
 export interface ApiResponse {

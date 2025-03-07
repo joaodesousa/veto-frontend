@@ -3,7 +3,6 @@ import { Check, ThumbsDown, ThumbsUp, X, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useEffect } from "react";
 
 // Define the type for the vote record
 interface VoteRecord {
@@ -28,7 +27,7 @@ interface Votes {
   };
   result: string;
   date: string;
-  hasVotes?: boolean;
+  hasVotes: boolean;
   allVotes: VoteRecord[];
 }
 
@@ -38,10 +37,7 @@ interface ProposalVotingProps {
 }
 
 export function ProposalVoting({ votes }: ProposalVotingProps) {
-  // Add a useEffect for debugging
-
-
-  // Check if there are any votes available - add lots of safety checks
+  // Check if there are any votes available
   const hasVotes = votes && (
     votes.hasVotes || 
     votes.favor > 0 || 
@@ -87,7 +83,7 @@ export function ProposalVoting({ votes }: ProposalVotingProps) {
             <p className="text-muted-foreground">Não há informações de votação disponíveis.</p>
           </div>
         ) : (
-          <Accordion type="single" collapsible defaultValue="vote-0">
+          <Accordion type="single" collapsible defaultValue={`vote-${voteRecords.length - 1}`}>
             {voteRecords.map((currentVote, index) => (
               <AccordionItem key={index} value={`vote-${index}`}>
                 <AccordionTrigger>

@@ -56,10 +56,7 @@ export async function getProposalForId(externalId: string): Promise<Proposal | n
     }
 
     const data = await response.json();
-
-    // Log the response to help diagnose any issues
-    console.log('Proposal API Response:', JSON.stringify(data, null, 2));
-
+    
     // Check if the response is the proposal directly
     return data as Proposal;
   } catch (error) {

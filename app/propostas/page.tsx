@@ -350,17 +350,31 @@ export default function PropostasPage() {
                         }
                       }
                       
-                      return (
-                        <ProposalCard
-                          key={proposal.id}
-                          title={proposal.title}
-                          number={proposal.external_id}
-                          status={phaseDisplay}
-                          date={proposal.date}
-                          party={partyDisplay}
-                          type={proposal.type}
-                        />
-                      );
+                      // Get the earliest phase date if available
+              const firstPhaseDate = (() => {
+                if (proposal.phases && Array.isArray(proposal.phases) && proposal.phases.length > 0) {
+                  // Sort phases by date (oldest first)
+                  const sortedPhases = [...proposal.phases].sort((a, b) => {
+                    return new Date(b.date).getTime() - new Date(a.date).getTime();
+                  });
+                  // Return the date of the earliest phase
+                  return sortedPhases[0].date;
+                }
+                // Fallback to proposal date if no phases available
+                return proposal.date;
+              })();
+              
+              return (
+                <ProposalCard
+                  key={proposal.id}
+                  title={proposal.title}
+                  number={proposal.external_id}
+                  status={phaseDisplay}
+                  date={firstPhaseDate}
+                  party={partyDisplay}
+                  type={proposal.type}
+                />
+              );
                     })}
                   </div>
                 ) : (

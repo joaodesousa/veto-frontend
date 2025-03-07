@@ -350,7 +350,7 @@ export function ProposalFilters({
                 {dateRange?.from ? (
                   dateRange.to ? (
                     <>
-                      {dateRange.from.toLocaleDateString()} - {dateRange.to.toLocaleDateString()}
+                      {dateRange.from.toLocaleDateString('pt-PT')} - {dateRange.to.toLocaleDateString('pt-PT')}
                     </>
                   ) : (
                     dateRange.from.toLocaleDateString()

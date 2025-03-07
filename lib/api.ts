@@ -64,10 +64,10 @@ export async function fetchItems(params: {
     }
 
     if (params.dateRange?.from) {
-      queryParams.append('start_date', format(params.dateRange.from, "yyyy-MM-dd"));
+      queryParams.append('start_date', format(params.dateRange.from, "dd-MM-yyyy"));
     }
     if (params.dateRange?.to) {
-      queryParams.append('end_date', format(params.dateRange.to, "yyyy-MM-dd"));
+      queryParams.append('end_date', format(params.dateRange.to, "dd-MM-yyyy"));
     }
 
     const API_BASE_URL = 'https://legis.veto.pt';
@@ -292,10 +292,10 @@ export async function fetchProposals(params: {
 
     // Date range filter
     if (params.dateRange?.from) {
-      queryParams.append('start_date', format(params.dateRange.from, "yyyy-MM-dd"));
+      queryParams.append('start_date', format(params.dateRange.from, "dd-MM-yyyy"));
     }
     if (params.dateRange?.to) {
-      queryParams.append('end_date', format(params.dateRange.to, "yyyy-MM-dd"));
+      queryParams.append('end_date', format(params.dateRange.to, "dd-MM-yyyy"));
     }
     
     const API_BASE_URL = 'https://legis.veto.pt';

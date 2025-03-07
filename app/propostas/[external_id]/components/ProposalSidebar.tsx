@@ -1,9 +1,10 @@
-import { Users, Bell } from "lucide-react"
+import { Users, Bell, FileText } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { getStatusColor } from "../../../utils/colors"
+import Link from "next/link"
 
 // Define the type for the proposal object
 interface Deputy {
@@ -21,6 +22,7 @@ interface Proposal {
   timeline: TimelineItem[];
   deputies: Deputy[];
   lastUpdate: string;
+  textLink: string | null;
 }
 
 // Define the props type for the ProposalSidebar component
@@ -67,12 +69,6 @@ export function ProposalSidebar({ proposal }: ProposalSidebarProps) {
       <CardContent>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Estado:</span>
-            <Badge className={statusColor}>
-              {proposal.status}
-            </Badge>
-          </div>
-          <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Fase Atual:</span>
             <span className="text-sm">
               {proposal.timeline && proposal.timeline.length > 0
@@ -90,11 +86,13 @@ export function ProposalSidebar({ proposal }: ProposalSidebarProps) {
             <span className="text-sm">{nextStep}</span>
           </div>
         </div>
-
-        <Button className="w-full mt-4 gap-1.5">
-          <Bell className="h-4 w-4" />
-          Receber Notificações
-        </Button>
+          
+        <Link href={proposal.textLink || '#'} target="_blank">
+          <Button className="w-full mt-4 gap-1.5 text-white">
+            <FileText className="h-4 w-4" />
+            Documento da Iniciativa
+          </Button>
+        </Link>
       </CardContent>
     </Card>
   )

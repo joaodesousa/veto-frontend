@@ -5,9 +5,10 @@ import Link from "next/link"
 import { Building2 } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
-import { MobileNav } from "@/components/mobile-nav"
+import { MobileSidebarNav } from "@/components/mobile-nav"
 import { cn } from "@/lib/utils"
 import { usePathname } from "next/navigation"
+import { toast } from "sonner"
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false)
@@ -37,7 +38,7 @@ export function Header() {
         "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b": !isHomePage || scrolled,
       })}
     >
-      <div className="container flex h-16 items-center justify-between">
+      <div className="container flex h-16 items-center justify-between px-4 md:px-6">
         <div className="flex items-center gap-2">
           <Link href="/" className="flex items-center gap-2">
             <Building2
@@ -49,7 +50,7 @@ export function Header() {
                 isHomePage && !scrolled ? "text-white" : "text-foreground",
               )}
             >
-              Veto
+              VETO
             </span>
           </Link>
         </div>
@@ -63,7 +64,7 @@ export function Header() {
           >
             Propostas
           </Link>
-          <Link
+          {/* <Link
             href="/deputados"
             className={cn(
               "text-sm font-medium transition-colors hover:text-primary",
@@ -80,7 +81,7 @@ export function Header() {
             )}
           >
             Estatísticas
-          </Link>
+          </Link> 
           <Link
             href="/sobre"
             className={cn(
@@ -89,18 +90,27 @@ export function Header() {
             )}
           >
             Sobre
-          </Link>
+          </Link>*/}
         </nav>
         <div className="flex items-center gap-2">
           <ThemeToggle isTransparent={isHomePage && !scrolled} />
           <Button
             variant={isHomePage && !scrolled ? "outline" : "default"}
             size="sm"
-            className={cn("hidden md:flex", isHomePage && !scrolled ? "border-white text-white hover:bg-white/10" : "")}
+            onClick={() =>
+              toast("Brevemente.", {
+                description: "Ainda estamos a trabalhar nesta funcionalidade.",
+                action: {
+                  label: "Fechar",
+                  onClick: () => console.log("Undo"),
+                },
+              })
+            }
+            className={cn("hidden md:flex", isHomePage && !scrolled ? "border-white bg-transparent text-white hover:bg-white/10" : "")}
           >
             Entrar
           </Button>
-          <MobileNav isTransparent={isHomePage && !scrolled} />
+          <MobileSidebarNav isTransparent={isHomePage && !scrolled} />
         </div>
       </div>
     </header>
