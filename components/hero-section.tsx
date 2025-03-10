@@ -14,6 +14,7 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import Link from "next/link"
 
 export function HeroSection() {
     return (
@@ -67,6 +68,7 @@ export function HeroSection() {
                 </p>
   
                 <div className="flex flex-col sm:flex-row gap-3">
+                  <Link href="/propostas">
                   <Button
                     size="lg"
                     className="bg-white text-blue-700 hover:bg-white/90 dark:bg-white dark:text-blue-900 dark:hover:bg-white/90"
@@ -74,13 +76,14 @@ export function HeroSection() {
                     Descobrir Propostas
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
-                  <Button
+                  </Link>
+                  {/* <Button
                     size="lg"
                     variant="outline"
                     className="border-white text-white bg-transparent hover:bg-white/10 hover:text-white dark:border-white dark:text-white dark:hover:bg-white/10"
                   >
                     Como Funciona
-                  </Button>
+                  </Button> */}
                 </div>
   
                 <div className="pt-4 flex flex-wrap gap-4 text-sm">
