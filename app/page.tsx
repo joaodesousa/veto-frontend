@@ -3,6 +3,25 @@ import { ProposalsSection } from "@/components/proposals-section"
 import { StatsSection } from "@/components/stats-section"
 import { getHomePageProposals, getDashboardStatistics } from "@/lib/server-api"
 
+
+export async function generateMetadata() {
+  
+  const title ="VETO"
+  const description = "Acompanhe o processo legislativo do Parlamento Português."
+
+  return {
+    title: title,
+    description: description,
+    openGraph: {
+      images: [{
+        url: `/api/og?title=${title}&description=${description}`,
+        width: 1200,
+        height: 630,
+      }]
+    }
+  }
+}
+
 export default async function Home() {
   // Fetch both proposals and statistics in parallel for better performance
   const [proposalsData, stats] = await Promise.all([

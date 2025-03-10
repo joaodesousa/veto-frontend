@@ -206,7 +206,7 @@ export async function GET(req: NextRequest) {
                   color: '#666666',
                   margin: 0,
                 }}>
-                  Acompanhamento legislativo português
+                   Quem decide o seu futuro?
                 </p>
               </div>
             </div>
