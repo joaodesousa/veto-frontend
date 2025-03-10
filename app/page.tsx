@@ -7,7 +7,7 @@ import { getHomePageProposals, getDashboardStatistics } from "@/lib/server-api"
 export async function generateMetadata() {
   
   const title ="VETO"
-  const description = "Acompanhe o processo legislativo do Parlamento Português."
+  const description = "Descubra como os deputados votam em temas que importam para si. Acompanhe, compare e participe na democracia portuguesa."
 
   return {
     title: title,
