@@ -61,7 +61,7 @@ export function ProposalsSection({ proposals }: ProposalsSectionProps) {
                   title={proposal.title}
                   number={proposal.external_id}
                   status={phaseDisplay}
-                  date={proposal.date}
+                  date={proposal.phases[0].date}
                   party={partyDisplay}
                   type={proposal.type}
                 />
