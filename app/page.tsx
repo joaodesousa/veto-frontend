@@ -14,7 +14,7 @@ export async function generateMetadata() {
     description: description,
     openGraph: {
       images: [{
-        url: `/api/og?title=${title}&description=${description}`,
+        url: `https://veto.pt/api/og?title=${title}&description=${description}`,
         width: 1200,
         height: 630,
       }]

@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: { params: { external_id: stri
     description: proposal.description || 'Sem descrição disponível',
     openGraph: {
       images: [{
-        url: `/api/og?title=${encodeURIComponent(proposal.title)}&subtitle=${encodeURIComponent(`${proposal.type}`)}`,
+        url: `https://veto.pt/api/og?title=${encodeURIComponent(proposal.title)}&subtitle=${encodeURIComponent(`${proposal.type}`)}`,
         width: 1200,
         height: 630,
       }]
