@@ -1,6 +1,6 @@
 "use client"
 import { Filter, Search } from "lucide-react"
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, Suspense } from "react"
 import type { DateRange } from "react-day-picker"
 import { debounce } from "lodash"
 
@@ -20,7 +20,7 @@ import { fetchProposals, fetchTypes, fetchPhases, fetchAuthors, fetchParties } f
 import { Proposal, Author, ApiResponse } from "@/lib/types"
 import { useUrlState } from "@/app/hooks/use-url-state"
 
-export default function PropostasPage() {
+function ProposalsContent() {
   // Get URL state handling functions
   const {
     getInitialPage,
@@ -541,5 +541,14 @@ export default function PropostasPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Wrap the component that uses useSearchParams in a Suspense boundary
+export default function PropostasPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><Skeleton className="h-16 w-16 rounded-full" /></div>}>
+      <ProposalsContent />
+    </Suspense>
   );
 }
