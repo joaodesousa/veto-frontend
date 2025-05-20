@@ -382,6 +382,12 @@ function ProposalsContent() {
                         allPhases={allPhases}
                         allAuthors={allAuthors}
                         allParties={allParties}
+                        initialLegislaturas={selectedLegislaturas}
+                        initialTypes={selectedTypes}
+                        initialPhases={selectedPhases}
+                        initialAuthors={selectedAuthors}
+                        initialParties={selectedParties}
+                        initialDateRange={dateRange}
                         onFiltersChange={(legislaturas, types, phases, authors, parties, dateRange) => {
                           setSelectedLegislaturas(legislaturas);
                           setSelectedTypes(types);
@@ -411,6 +417,12 @@ function ProposalsContent() {
                     allPhases={allPhases}
                     allAuthors={allAuthors}
                     allParties={allParties}
+                    initialLegislaturas={selectedLegislaturas}
+                    initialTypes={selectedTypes}
+                    initialPhases={selectedPhases}
+                    initialAuthors={selectedAuthors} 
+                    initialParties={selectedParties}
+                    initialDateRange={dateRange}
                     onFiltersChange={handleFiltersChange}
                   />
                 )}

@@ -20,6 +20,12 @@ interface ProposalFiltersProps {
   allPhases: string[] | any[];
   allAuthors: Author[];
   allParties: Author[];
+  initialTypes?: string[];
+  initialPhases?: string[];
+  initialAuthors?: string[];
+  initialParties?: string[];
+  initialLegislaturas?: string[];
+  initialDateRange?: DateRange;
   onFiltersChange: (
     legislaturas: string[],
     types: string[], 
@@ -36,10 +42,20 @@ export function ProposalFilters({
   allPhases,
   allAuthors,
   allParties,
+  initialTypes = [],
+  initialPhases = [],
+  initialAuthors = [],
+  initialParties = [],
+  initialLegislaturas,
+  initialDateRange,
   onFiltersChange 
 }: ProposalFiltersProps) {
   // Filter states
   const [selectedLegislaturas, setSelectedLegislaturas] = React.useState<string[]>(() => {
+    // If initialLegislaturas is provided, use it
+    if (initialLegislaturas && initialLegislaturas.length > 0) {
+      return initialLegislaturas;
+    }
     // Set "XVI" as default if it exists in allLegislaturas
     if (Array.isArray(allLegislaturas) && allLegislaturas.includes("XVI")) {
       return ["XVI"];
@@ -50,11 +66,11 @@ export function ProposalFilters({
     }
     return [];
   });
-  const [selectedPhases, setSelectedPhases] = React.useState<string[]>([]);
-  const [selectedParties, setSelectedParties] = React.useState<string[]>([]);
-  const [selectedTopics, setSelectedTopics] = React.useState<string[]>([]);
-  const [selectedAuthors, setSelectedAuthors] = React.useState<string[]>([]);
-  const [dateRange, setDateRange] = React.useState<DateRange | undefined>(undefined);
+  const [selectedPhases, setSelectedPhases] = React.useState<string[]>(initialPhases);
+  const [selectedParties, setSelectedParties] = React.useState<string[]>(initialParties);
+  const [selectedTopics, setSelectedTopics] = React.useState<string[]>(initialTypes);
+  const [selectedAuthors, setSelectedAuthors] = React.useState<string[]>(initialAuthors);
+  const [dateRange, setDateRange] = React.useState<DateRange | undefined>(initialDateRange);
   
   // Flag to avoid the initial onFiltersChange call
   const isInitialMount = useRef(true);
