@@ -27,7 +27,7 @@ export function ProposalHeader({ proposal }: ProposalHeaderProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-3xl font-bold">{proposal.title}</h1>
+      <h1 className="text-3xl font-bold font-title">{proposal.title}</h1>
       <div className="flex flex-col sm:flex-row gap-4 text-sm text-muted-foreground">
         <div className="flex items-center">
           <FileText className="mr-2 h-4 w-4" />

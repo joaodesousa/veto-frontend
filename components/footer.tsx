@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Building2 } from "lucide-react"
+import Image from "next/image"
 
 export function Footer() {
   return (
@@ -8,8 +8,14 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           <div className="flex flex-col gap-2">
             <Link href="/" className="flex items-center gap-2">
-              <Building2 className="h-6 w-6 text-primary" />
-              <span className="font-bold text-xl">Veto</span>
+              <Image 
+                src="/logo_white.png" 
+                alt="VETO Logo"
+                width={50}
+                height={50}
+                className="h-15 w-15 object-contain transition-opacity"
+              />
+              <span className="font-bold text-xl">VETO</span>
             </Link>
             <p className="text-sm text-muted-foreground mt-2">
               Acompanhamento de propostas legislativas no Parlamento Português.

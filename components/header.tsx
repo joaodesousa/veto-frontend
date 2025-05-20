@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Building2 } from "lucide-react"
+import Image from "next/image"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { MobileSidebarNav } from "@/components/mobile-nav"
@@ -41,8 +41,12 @@ export function Header() {
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
         <div className="flex items-center gap-2">
           <Link href="/" className="flex items-center gap-2">
-            <Building2
-              className={cn("h-6 w-6 transition-colors", isHomePage && !scrolled ? "text-white" : "text-primary")}
+            <Image 
+              src="/logo_white.png" 
+              alt="VETO Logo"
+              width={50}
+              height={50}
+              className="h-15 w-15 object-contain transition-opacity"
             />
             <span
               className={cn(

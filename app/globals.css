@@ -134,3 +134,23 @@
 .float-fast {
   animation: float-fast 5s ease-in-out infinite, pulse-glow 3s ease-in-out infinite;
 }
+
+@font-face {
+  font-family: 'Gill Sans';
+  src: url('/fonts/Gill Sans Bold.otf') format('opentype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Gill Sans';
+  src: url('/fonts/Gill Sans Bold Italic.otf') format('opentype');
+  font-weight: bold;
+  font-style: italic;
+  font-display: swap;
+}
+
+.font-title {
+  font-family: 'Gill Sans', 'Mona Sans', Arial, sans-serif;
+  font-weight: bold;
+}

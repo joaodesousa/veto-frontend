@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
           alignItems: "center",
           justifyContent: "center",
           background: "linear-gradient(135deg, #f8fafc, #f1f5f9)",
-          fontFamily: '"Mona Sans"',
+          fontFamily: 'Gill Sans, Mona Sans',
           position: "relative",
           overflow: "hidden",
         }}
@@ -176,6 +176,7 @@ export async function GET(req: NextRequest) {
                   color: "#1E293B",
                   margin: 0,
                   lineHeight: 1.1,
+                  fontFamily: 'Gill Sans, Mona Sans',
                 }}
               >
                 {title}
