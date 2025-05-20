@@ -25,10 +25,10 @@ export const metadata: Metadata = {
     siteName: "Veto",
     images: [
       {
-        url: "https://veto.pt/logo.png",
+        url: "https://veto.pt/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Veto Logo",
+        alt: "VETO",
       },
     ],
   },
@@ -36,8 +36,8 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Veto | Monitorização de Legislação Portuguesa em Tempo Real",
     description: "Acompanhe e analise propostas legislativas no Parlamento Português com alertas personalizados e análises detalhadas.",
-    images: ["https://veto.pt/logo.png"],
-    creator: "@veto",
+    images: ["https://veto.pt/og-image.png"],
+    creator: "@vetopt",
   },
   alternates: {
     canonical: "https://veto.pt",
