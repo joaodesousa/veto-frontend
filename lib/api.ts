@@ -11,6 +11,7 @@ export async function fetchItems(params: {
   types: string[]
   phases: string[]
   authors: string[]
+  legislaturas: string[]
   dateRange: DateRange | undefined
 }): Promise<ApiResponse> {
   try {
@@ -37,6 +38,10 @@ export async function fetchItems(params: {
 
     if (params.authors.length > 0) {
       queryParams.append('author', params.authors.join(','));
+    }
+    
+    if (params.legislaturas.length > 0) {
+      queryParams.append('legislatura', params.legislaturas.join(','));
     }
 
     if (params.dateRange?.from) {
@@ -103,8 +108,7 @@ export async function fetchTypes(): Promise<string[]> {
  */
 export async function fetchPhases(): Promise<string[]> {
   try {
-    // Fetch initiatives to extract unique phases
-    const response: Response = await fetch('https://legis.veto.pt/api/iniciativas?limit=100', {
+    const response: Response = await fetch('https://legis.veto.pt/api/fases', {
       next: { revalidate: 3600 } // Cache for 1 hour
     });
     
@@ -115,23 +119,10 @@ export async function fetchPhases(): Promise<string[]> {
     const data = await response.json();
     
     if (data && data.data && Array.isArray(data.data)) {
-      // Extract unique phases from initiatives
-      const phasesSet = new Set<string>();
-      
-      data.data.forEach((initiative: any) => {
-        if (initiative.IniEventos && Array.isArray(initiative.IniEventos)) {
-          initiative.IniEventos.forEach((event: { Fase?: string }) => {
-            if (event.Fase) {
-              phasesSet.add(event.Fase);
-            }
-          });
-        }
-      });
-      
-      return Array.from(phasesSet);
+      return data.data;
     }
     
-    console.error("Unexpected data structure for phases extraction:", data);
+    console.error("Unexpected data structure for phases:", data);
     return [];
   } catch (error) {
     console.error("Error fetching phases:", error);
@@ -196,6 +187,33 @@ export async function fetchParties(): Promise<Author[]> {
 }
 
 /**
+ * Fetch legislature options
+ */
+export async function fetchLegislaturas(): Promise<string[]> {
+  try {
+    const response: Response = await fetch('https://legis.veto.pt/api/legislaturas', {
+      next: { revalidate: 3600 } // Cache for 1 hour
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data && data.data && Array.isArray(data.data)) {
+      return data.data;
+    }
+    
+    console.error("Unexpected data structure for legislaturas:", data);
+    return [];
+  } catch (error) {
+    console.error("Error fetching legislaturas:", error);
+    throw error;
+  }
+}
+
+/**
  * Fetch proposals for the proposals page with comprehensive filtering
  */
 export async function fetchProposals(params: {
@@ -205,6 +223,7 @@ export async function fetchProposals(params: {
   phases?: string[]
   authors?: string[]
   parties?: string[]
+  legislaturas?: string[]
   dateRange?: DateRange
   orderBy?: string
 }): Promise<ApiResponse> {
@@ -235,6 +254,10 @@ export async function fetchProposals(params: {
     
     if (params.parties && params.parties.length > 0) {
       queryParams.append('partido', params.parties.join(','));
+    }
+    
+    if (params.legislaturas && params.legislaturas.length > 0) {
+      queryParams.append('legislature', params.legislaturas.join(','));
     }
 
     if (params.dateRange?.from) {

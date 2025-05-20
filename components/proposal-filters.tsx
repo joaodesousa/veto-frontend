@@ -15,11 +15,13 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Author } from "@/lib/types"
 
 interface ProposalFiltersProps {
+  allLegislaturas: string[] | any[];
   allTypes: string[] | any[];
   allPhases: string[] | any[];
   allAuthors: Author[];
   allParties: Author[];
   onFiltersChange: (
+    legislaturas: string[],
     types: string[], 
     phases: string[], 
     authors: string[], 
@@ -29,6 +31,7 @@ interface ProposalFiltersProps {
 }
 
 export function ProposalFilters({ 
+  allLegislaturas,
   allTypes,
   allPhases,
   allAuthors,
@@ -36,6 +39,17 @@ export function ProposalFilters({
   onFiltersChange 
 }: ProposalFiltersProps) {
   // Filter states
+  const [selectedLegislaturas, setSelectedLegislaturas] = React.useState<string[]>(() => {
+    // Set "XVI" as default if it exists in allLegislaturas
+    if (Array.isArray(allLegislaturas) && allLegislaturas.includes("XVI")) {
+      return ["XVI"];
+    }
+    // If "XVI" doesn't exist but there's one value, select that
+    else if (Array.isArray(allLegislaturas) && allLegislaturas.length === 1) {
+      return [String(allLegislaturas[0])];
+    }
+    return [];
+  });
   const [selectedPhases, setSelectedPhases] = React.useState<string[]>([]);
   const [selectedParties, setSelectedParties] = React.useState<string[]>([]);
   const [selectedTopics, setSelectedTopics] = React.useState<string[]>([]);
@@ -44,6 +58,33 @@ export function ProposalFilters({
   
   // Flag to avoid the initial onFiltersChange call
   const isInitialMount = useRef(true);
+  
+  // Helper function to extract display name from Legislatura 
+  const extractLegislaturaName = (legislatura: any): string => {
+    if (typeof legislatura === 'string') {
+      return legislatura;
+    }
+    
+    if (legislatura && typeof legislatura === 'object') {
+      // Try name first as most likely property
+      if (legislatura.name && typeof legislatura.name === 'string') {
+        return legislatura.name;
+      }
+      
+      // Try other possible properties
+      for (const key of ['legislatura', 'title', 'label', 'description', 'value']) {
+        if (legislatura[key] && typeof legislatura[key] === 'string') {
+          return legislatura[key];
+        }
+      }
+      
+      // Fallback to a default string
+      return `Legislatura ${legislatura.id || ''}`;
+    }
+    
+    // Fallback for null/undefined
+    return String(legislatura || '');
+  };
   
   // Helper function to extract display name from phase objects
   const extractPhaseName = (phase: any): string => {
@@ -115,13 +156,23 @@ export function ProposalFilters({
     
     // Only call with the raw values - no processing that could trigger new renders
     onFiltersChange(
+      selectedLegislaturas,
       selectedTopics,
       selectedPhases,
       selectedAuthors,
       selectedParties,
       dateRange
     );
-  }, [selectedPhases, selectedParties, selectedTopics, selectedAuthors, dateRange, onFiltersChange]);
+  }, [selectedLegislaturas, selectedPhases, selectedParties, selectedTopics, selectedAuthors, dateRange, onFiltersChange]);
+
+  // Handle legislatura change
+  const handleLegislaturaChange = (legislatura: string, checked: boolean) => {
+    if (checked) {
+      setSelectedLegislaturas(prev => [...prev, legislatura]);
+    } else {
+      setSelectedLegislaturas(prev => prev.filter(l => l !== legislatura));
+    }
+  };
 
   // Handler functions for updating filters - these explicitly set state
   const handleTopicChange = (topic: string, checked: boolean) => {
@@ -157,6 +208,7 @@ export function ProposalFilters({
   };
 
   // Clear filters functionality
+  const clearLegislaturas = () => setSelectedLegislaturas([]);
   const clearPhases = () => setSelectedPhases([]);
   const clearParties = () => setSelectedParties([]);
   const clearTopics = () => setSelectedTopics([]);
@@ -165,6 +217,7 @@ export function ProposalFilters({
 
   // Clear all filters
   const clearAllFilters = () => {
+    clearLegislaturas();
     clearPhases();
     clearParties();
     clearTopics();
@@ -173,7 +226,8 @@ export function ProposalFilters({
   };
 
   // Check if any filters are applied
-  const hasFilters = selectedPhases.length > 0 || 
+  const hasFilters = selectedLegislaturas.length > 0 ||
+                    selectedPhases.length > 0 || 
                     selectedParties.length > 0 || 
                     selectedTopics.length > 0 || 
                     selectedAuthors.length > 0 || 
@@ -181,6 +235,56 @@ export function ProposalFilters({
 
   return (
     <div className="space-y-4">
+      {/* Legislatura Filter (First one) */}
+      <div>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-sm font-medium">Legislatura</h3>
+          {selectedLegislaturas.length > 0 && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={clearLegislaturas}
+              className="h-8 px-2 text-xs"
+            >
+              Limpar
+            </Button>
+          )}
+        </div>
+        <ScrollArea className="h-[100px] pr-4">
+          <div className="space-y-3">
+            {Array.isArray(allLegislaturas) && allLegislaturas.map((legislatura, index) => {
+              // Extract the display name
+              const legislaturaStr = extractLegislaturaName(legislatura);
+              
+              // Create a unique key 
+              const legislaturaKey = typeof legislatura === 'object' && legislatura.id ? 
+                String(legislatura.id) : 
+                (typeof legislatura === 'string' ? legislatura : `legislatura-${index}`);
+              
+              return (
+                <div key={`legislatura-${legislaturaKey}`} className="flex items-center space-x-2">
+                  <Checkbox 
+                    id={`legislatura-${index}`} 
+                    checked={selectedLegislaturas.includes(legislaturaStr)}
+                    onCheckedChange={(checked) => {
+                      handleLegislaturaChange(legislaturaStr, !!checked);
+                    }}
+                  />
+                  <label
+                    htmlFor={`legislatura-${index}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {legislaturaStr}
+                  </label>
+                </div>
+              );
+            })}
+          </div>
+        </ScrollArea>
+      </div>
+
+      <Separator />
+
       {/* Topics/Types Filter (Now at the top) */}
       <div>
         <div className="flex justify-between items-center mb-4">

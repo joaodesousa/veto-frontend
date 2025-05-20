@@ -95,14 +95,14 @@ export async function getProposalForId(externalId: string): Promise<Proposal | n
           publicacao?: string;
           reuniao?: string;
           tipoReuniao?: string;
+          parsedVote?: {
+            favor: string[];
+            contra: string[];
+            abstencao: string[];
+            unanime: boolean;
+            resultado: string;
+          };
         }>;
-        parsedVote?: {
-          favor: string[];
-          contra: string[];
-          abstencao: string[];
-          unanime: boolean;
-          resultado: string;
-        };
       }, index: number) => ({
         id: index,
         name: event.Fase || '',
@@ -123,6 +123,13 @@ export async function getProposalForId(externalId: string): Promise<Proposal | n
           publicacao?: string;
           reuniao?: string;
           tipoReuniao?: string;
+          parsedVote?: {
+            favor: string[];
+            contra: string[];
+            abstencao: string[];
+            unanime: boolean;
+            resultado: string;
+          };
         }) => ({
           id: vote.id || '',
           date: vote.data || '',
@@ -133,15 +140,15 @@ export async function getProposalForId(externalId: string): Promise<Proposal | n
           description: vote.descricao || '',
           publication: vote.publicacao || '',
           meeting: vote.reuniao || '',
-          meetingType: vote.tipoReuniao || ''
+          meetingType: vote.tipoReuniao || '',
+          parsedVote: vote.parsedVote ? {
+            favor: vote.parsedVote.favor || [],
+            contra: vote.parsedVote.contra || [],
+            abstencao: vote.parsedVote.abstencao || [],
+            unanime: vote.parsedVote.unanime || false,
+            resultado: vote.parsedVote.resultado || ''
+          } : undefined
         })) || [],
-        parsedVote: event.parsedVote ? {
-          favor: event.parsedVote.favor || [],
-          contra: event.parsedVote.contra || [],
-          abstencao: event.parsedVote.abstencao || [],
-          unanime: event.parsedVote.unanime || false,
-          resultado: event.parsedVote.resultado || ''
-        } : undefined
       })) || [],
       votes: [],  // This will be populated from the phases' votes
       attachments: data.IniAnexos?.map((anexo: {

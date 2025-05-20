@@ -54,7 +54,7 @@ export function Header() {
             </span>
           </Link>
         </div>
-        <nav className="hidden md:flex items-center gap-6">
+         {/* <nav className="hidden md:flex items-center gap-6">
           <Link
             href="/propostas"
             className={cn(
@@ -64,7 +64,7 @@ export function Header() {
           >
             Propostas
           </Link>
-          {/* <Link
+         <Link
             href="/deputados"
             className={cn(
               "text-sm font-medium transition-colors hover:text-primary",
@@ -90,8 +90,8 @@ export function Header() {
             )}
           >
             Sobre
-          </Link>*/}
-        </nav>
+          </Link>
+        </nav>*/}
         <div className="flex items-center gap-2">
           <ThemeToggle isTransparent={isHomePage && !scrolled} />
           <Button

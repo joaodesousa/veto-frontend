@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { ProposalCardSkeleton } from "@/components/proposal-skeleton" 
 import { FilterSkeleton } from "@/components/filter-skeleton"
 
-import { fetchProposals, fetchTypes, fetchPhases, fetchAuthors, fetchParties } from "@/lib/api"
+import { fetchProposals, fetchTypes, fetchPhases, fetchAuthors, fetchParties, fetchLegislaturas } from "@/lib/api"
 import { Proposal, Author, ApiResponse } from "@/lib/types"
 import { useUrlState } from "@/app/hooks/use-url-state"
 
@@ -48,6 +48,14 @@ function ProposalsContent() {
   // Filtering and search states - initialized from URL
   const [searchTerm, setSearchTerm] = useState(getInitialSearch())
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(getInitialSearch())
+  const [selectedLegislaturas, setSelectedLegislaturas] = useState<string[]>(() => {
+    // If there are legislaturas in the URL, use them
+    if (initialFilters.legislaturas && initialFilters.legislaturas.length > 0) {
+      return initialFilters.legislaturas;
+    }
+    // Otherwise default to "XVI"
+    return ["XVI"];
+  })
   const [selectedTypes, setSelectedTypes] = useState<string[]>(initialFilters.types || [])
   const [selectedPhases, setSelectedPhases] = useState<string[]>(initialFilters.phases || [])
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>(initialFilters.authors || [])
@@ -55,6 +63,7 @@ function ProposalsContent() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(initialFilters.dateRange)
   
   // Filter options data
+  const [allLegislaturas, setAllLegislaturas] = useState<string[]>([])
   const [allTypes, setAllTypes] = useState<string[]>([])
   const [allPhases, setAllPhases] = useState<string[]>([])
   const [allAuthors, setAllAuthors] = useState<Author[]>([])
@@ -92,6 +101,7 @@ function ProposalsContent() {
         page: currentPage,
         search: debouncedSearchTerm,
         filters: {
+          legislaturas: selectedLegislaturas,
           types: selectedTypes,
           phases: selectedPhases,
           authors: selectedAuthors,
@@ -106,7 +116,8 @@ function ProposalsContent() {
   }, [
     initialLoadComplete,
     currentPage, 
-    debouncedSearchTerm, 
+    debouncedSearchTerm,
+    selectedLegislaturas,
     selectedTypes, 
     selectedPhases, 
     selectedAuthors, 
@@ -120,12 +131,24 @@ function ProposalsContent() {
     const fetchFilterOptions = async () => {
       try {
         // Fetch all filter options in parallel
-        const [typesData, phasesData, authorsData, partiesData] = await Promise.all([
+        const [legislaturasData, typesData, phasesData, authorsData, partiesData] = await Promise.all([
+          fetchLegislaturas(),
           fetchTypes(),
           fetchPhases(),
           fetchAuthors(),
           fetchParties(),
         ]);
+        
+        // Safely handle legislaturas data
+        if (Array.isArray(legislaturasData)) {
+          // Filter out null/undefined values and reverse the array to invert the order
+          setAllLegislaturas(legislaturasData
+            .filter((legislatura) => legislatura !== null && legislatura !== undefined)
+            .reverse());
+        } else {
+          console.warn("Legislaturas data is not an array:", legislaturasData);
+          setAllLegislaturas([]);
+        }
         
         // Safely handle types data - ensure it's an array
         if (Array.isArray(typesData)) {
@@ -184,6 +207,7 @@ function ProposalsContent() {
         const response = await fetchProposals({
           page: urlPage, // Use the URL page rather than the state
           search: debouncedSearchTerm,
+          legislaturas: selectedLegislaturas,
           types: selectedTypes,
           phases: selectedPhases,
           authors: selectedAuthors,
@@ -210,7 +234,8 @@ function ProposalsContent() {
     filterDataReady, 
     initialLoadComplete, 
     getInitialPage, 
-    debouncedSearchTerm, 
+    debouncedSearchTerm,
+    selectedLegislaturas,
     selectedTypes, 
     selectedPhases, 
     selectedAuthors, 
@@ -228,6 +253,7 @@ function ProposalsContent() {
         const response = await fetchProposals({
           page: currentPage,
           search: debouncedSearchTerm,
+          legislaturas: selectedLegislaturas,
           types: selectedTypes,
           phases: selectedPhases,
           authors: selectedAuthors,
@@ -252,7 +278,8 @@ function ProposalsContent() {
   }, [
     initialLoadComplete,
     currentPage, 
-    debouncedSearchTerm, 
+    debouncedSearchTerm,
+    selectedLegislaturas,
     selectedTypes, 
     selectedPhases, 
     selectedAuthors, 
@@ -262,7 +289,8 @@ function ProposalsContent() {
   
 
   // Skip the page reset on initial render, only reset page on user-initiated filter changes
-  const handleFiltersChange = useCallback((types: string[], phases: string[], authors: string[], parties: string[], dateRangeValue: DateRange | undefined) => {
+  const handleFiltersChange = useCallback((legislaturas: string[], types: string[], phases: string[], authors: string[], parties: string[], dateRangeValue: DateRange | undefined) => {
+    setSelectedLegislaturas(legislaturas);
     setSelectedTypes(types);
     setSelectedPhases(phases);
     setSelectedAuthors(authors);
@@ -279,11 +307,13 @@ function ProposalsContent() {
   // Function to remove a filter
   const removeFilter = (filterType: string, value: string) => {
     switch (filterType) {
+      case 'legislaturas':
+        setSelectedLegislaturas(prev => prev.filter(legislatura => legislatura !== value))
+        break
       case 'types':
         setSelectedTypes(prev => prev.filter(type => type !== value))
         break
       case 'phases':
-        // Fixed bug: was using phase variable instead of value
         setSelectedPhases(prev => prev.filter(phase => phase !== value))
         break
       case 'authors':
@@ -347,11 +377,13 @@ function ProposalsContent() {
                       <FilterSkeleton />
                     ) : (
                       <ProposalFilters 
+                        allLegislaturas={allLegislaturas}
                         allTypes={allTypes}
                         allPhases={allPhases}
                         allAuthors={allAuthors}
                         allParties={allParties}
-                        onFiltersChange={(types, phases, authors, parties, dateRange) => {
+                        onFiltersChange={(legislaturas, types, phases, authors, parties, dateRange) => {
+                          setSelectedLegislaturas(legislaturas);
                           setSelectedTypes(types);
                           setSelectedPhases(phases);
                           setSelectedAuthors(authors);
@@ -374,6 +406,7 @@ function ProposalsContent() {
                   <FilterSkeleton />
                 ) : (
                   <ProposalFilters 
+                    allLegislaturas={allLegislaturas}
                     allTypes={allTypes}
                     allPhases={allPhases}
                     allAuthors={allAuthors}
@@ -395,8 +428,19 @@ function ProposalsContent() {
                 </div>
 
                 {/* Active Filters Display */}
-                {(selectedTypes.length > 0 || selectedPhases.length > 0 || selectedAuthors.length > 0 || selectedParties.length > 0 || dateRange?.from) && (
+                {(selectedLegislaturas.length > 0 || selectedTypes.length > 0 || selectedPhases.length > 0 || selectedAuthors.length > 0 || selectedParties.length > 0 || dateRange?.from) && (
                   <div className="flex flex-wrap gap-2 mb-4">
+                    {selectedLegislaturas.map(legislatura => (
+                      <Badge key={`legislatura-${legislatura}`} variant="secondary" className="gap-1">
+                        {legislatura}
+                        <button 
+                          className="ml-1 rounded-full hover:bg-muted"
+                          onClick={() => removeFilter('legislaturas', legislatura)}
+                        >
+                          ✕
+                        </button>
+                      </Badge>
+                    ))}
                     {selectedTypes.map(type => (
                       <Badge key={`type-${type}`} variant="secondary" className="gap-1">
                         {type}

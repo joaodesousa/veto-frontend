@@ -243,44 +243,55 @@ const formatVotes = (votes: Vote[] = [], phases: Phase[] = []): FormattedProposa
     allVotes: []
   };
   
-  // First check if we have any phases with parsedVote
-  const phasesWithParsedVotes = phases.filter(phase => phase.parsedVote);
+  // Get all votes with parsedVote from all phases
+  const votesWithParsedVote: Vote[] = [];
   
-  // If we have phases with parsedVote, use those instead of the old vote system
-  if (phasesWithParsedVotes.length > 0) {
+  // Collect all votes with parsedVote from all phases
+  phases.forEach(phase => {
+    if (phase.votes && Array.isArray(phase.votes)) {
+      phase.votes.forEach(vote => {
+        if (vote.parsedVote) {
+          votesWithParsedVote.push(vote);
+        }
+      });
+    }
+  });
+  
+  // If we have votes with parsedVote, use those instead of the old vote system
+  if (votesWithParsedVote.length > 0) {
     voteData.hasVotes = true;
     
-    // Process all phases with parsedVote
-    voteData.allVotes = phasesWithParsedVotes.map(phase => {
-      if (!phase.parsedVote) return {} as VoteRecord;
+    // Process all votes with parsedVote
+    voteData.allVotes = votesWithParsedVote.map(vote => {
+      if (!vote.parsedVote) return {} as VoteRecord;
       
       const voteRecord: VoteRecord = {
-        favor: phase.parsedVote.favor.length,
-        against: phase.parsedVote.contra.length,
-        abstention: phase.parsedVote.abstencao.length,
+        favor: vote.parsedVote.favor.length,
+        against: vote.parsedVote.contra.length,
+        abstention: vote.parsedVote.abstencao.length,
         parties: {},
-        result: phase.parsedVote.resultado || "",
-        date: phase.date ? formatDate(phase.date) : "",
-        description: phase.name || ""
+        result: vote.parsedVote.resultado || vote.result || "",
+        date: vote.date ? formatDate(vote.date) : "",
+        description: vote.description || ""
       };
       
       // Process parties voting in favor
-      phase.parsedVote.favor.forEach(party => {
+      vote.parsedVote.favor.forEach(party => {
         voteRecord.parties[party] = "favor";
       });
       
       // Process parties voting against
-      phase.parsedVote.contra.forEach(party => {
+      vote.parsedVote.contra.forEach(party => {
         voteRecord.parties[party] = "against";
       });
       
       // Process parties abstaining
-      phase.parsedVote.abstencao.forEach(party => {
+      vote.parsedVote.abstencao.forEach(party => {
         voteRecord.parties[party] = "abstention";
       });
       
       // Handle unanimous votes
-      if (phase.parsedVote.unanime) {
+      if (vote.parsedVote.unanime) {
         voteRecord.parties = { "Todos os partidos": "favor" };
         voteRecord.favor = 1;
       }
@@ -304,8 +315,40 @@ const formatVotes = (votes: Vote[] = [], phases: Phase[] = []): FormattedProposa
         description: vote.description || ""
       };
       
-      // Process party votes from the 'votes' object if it exists
-      if (vote.votes) {
+      // Check if this vote has parsedVote directly
+      if (vote.parsedVote) {
+        voteRecord.favor = vote.parsedVote.favor.length;
+        voteRecord.against = vote.parsedVote.contra.length;
+        voteRecord.abstention = vote.parsedVote.abstencao.length;
+        
+        // Process parties voting in favor
+        vote.parsedVote.favor.forEach(party => {
+          voteRecord.parties[party] = "favor";
+        });
+        
+        // Process parties voting against
+        vote.parsedVote.contra.forEach(party => {
+          voteRecord.parties[party] = "against";
+        });
+        
+        // Process parties abstaining
+        vote.parsedVote.abstencao.forEach(party => {
+          voteRecord.parties[party] = "abstention";
+        });
+        
+        // Handle unanimous votes
+        if (vote.parsedVote.unanime) {
+          voteRecord.parties = { "Todos os partidos": "favor" };
+          voteRecord.favor = 1;
+        }
+        
+        // Use parsed vote result if available
+        if (vote.parsedVote.resultado) {
+          voteRecord.result = vote.parsedVote.resultado;
+        }
+      }
+      // Process party votes from the 'votes' object if it exists and no parsedVote
+      else if (vote.votes) {
         // Count parties voting in favor
         if (vote.votes.a_favor && Array.isArray(vote.votes.a_favor)) {
           voteRecord.favor = vote.votes.a_favor.length;

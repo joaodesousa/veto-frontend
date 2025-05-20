@@ -22,7 +22,6 @@ export interface Phase {
   observation: string;
   commissions: Commission[];
   votes: Vote[];
-  parsedVote?: ParsedVote;
 }
 
 export interface TimelineSubitem {
@@ -66,6 +65,7 @@ export interface Vote {
   meeting: string;
   meetingType: string;
   votes?: VoteParties;
+  parsedVote?: ParsedVote;
 }
 
 export interface VoteRecord {
@@ -256,6 +256,7 @@ export interface DashboardStats {
 }
 
 export interface FilterState {
+  legislaturas: string[];
   types: string[];
   phases: string[];
   authors: string[];

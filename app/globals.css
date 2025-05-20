@@ -75,3 +75,62 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Mona+Sans:wght@400;700&display=swap');
 
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes float-medium {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes float-fast {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 15px 0 rgba(59, 130, 246, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 25px 5px rgba(59, 130, 246, 0.2);
+  }
+}
+
+.card-glass {
+  background: rgba(30, 58, 138, 0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2), 0 0 1px 0 rgba(255, 255, 255, 0.1) inset, 0 0 15px 0
+    rgba(59, 130, 246, 0.15);
+}
+
+.float-slow {
+  animation: float-slow 6s ease-in-out infinite, pulse-glow 4s ease-in-out infinite;
+}
+
+.float-medium {
+  animation: float-medium 7s ease-in-out infinite, pulse-glow 5s ease-in-out infinite;
+}
+
+.float-fast {
+  animation: float-fast 5s ease-in-out infinite, pulse-glow 3s ease-in-out infinite;
+}

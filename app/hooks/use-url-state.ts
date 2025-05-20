@@ -23,6 +23,7 @@ export function useUrlState() {
     const initialPhases = searchParams.get('phases')?.split(',') || []
     const initialAuthors = searchParams.get('authors')?.split(',') || []
     const initialParties = searchParams.get('partido')?.split(',') || []
+    const initialLegislaturas = searchParams.get('legislature')?.split(',') || []
     
     // Parse date range if present
     let initialDateRange: { from: Date; to?: Date } | undefined = undefined
@@ -37,6 +38,7 @@ export function useUrlState() {
     }
     
     return {
+      legislaturas: initialLegislaturas,
       types: initialTypes,
       phases: initialPhases,
       authors: initialAuthors,
@@ -65,6 +67,7 @@ export function useUrlState() {
     if (params.filters.phases.length > 0) urlParams.set('phases', params.filters.phases.join(','))
     if (params.filters.authors.length > 0) urlParams.set('authors', params.filters.authors.join(','))
     if (params.filters.parties.length > 0) urlParams.set('partido', params.filters.parties.join(','))
+    if (params.filters.legislaturas.length > 0) urlParams.set('legislature', params.filters.legislaturas.join(','))
     
     if (params.filters.dateRange?.from) {
       urlParams.set('startDate', params.filters.dateRange.from.toISOString().split('T')[0])
