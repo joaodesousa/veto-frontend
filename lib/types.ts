@@ -19,8 +19,10 @@ export interface Phase {
   id: number;
   name: string;
   date: string;
-  observation?: string;
-  commissions?: Commission[];
+  observation: string;
+  commissions: Commission[];
+  votes: Vote[];
+  parsedVote?: ParsedVote;
 }
 
 export interface TimelineSubitem {
@@ -44,13 +46,26 @@ export interface VoteParties {
   detalhe?: string;
 }
 
+export interface ParsedVote {
+  favor: string[];
+  contra: string[];
+  abstencao: string[];
+  unanime: boolean;
+  resultado: string;
+}
+
 export interface Vote {
-  date: string | null;
+  id: string;
+  date: string;
   result: string;
-  details: string | null;
+  unanimous: boolean;
+  absences: string;
+  detail: string;
+  description: string;
+  publication: string;
+  meeting: string;
+  meetingType: string;
   votes?: VoteParties;
-  description?: string;
-  unanimous?: string;
 }
 
 export interface VoteRecord {
@@ -64,9 +79,9 @@ export interface VoteRecord {
 }
 
 export interface Attachment {
-  url: string;
+  id: string;
   name: string;
-  file_url: string;
+  url: string;
 }
 
 export interface Document {
@@ -89,6 +104,7 @@ export interface Proposal {
   id: number;
   title: string;
   type: string;
+  descType?: string;
   legislature: number;
   date: string;
   link: string;
@@ -100,14 +116,26 @@ export interface Proposal {
   attachments: Attachment[];
   publication_url: string | null;
   publication_date: string | null;
-  related_proposals?: RelatedProposal[]; // Raw API field name (typically snake_case)
+  related_proposals?: RelatedProposal[];
   text_link: string | null;
+  text_substitution: boolean;
+  text_substitution_field: string | null;
+  european_initiatives: any | null;
+  origin_initiatives: any | null;
+  derived_initiatives: any | null;
+  links: any | null;
+  petitions: any | null;
+  amendment_proposals: any | null;
+  IniAutorGruposParlamentares?: any | null;
+  IniAutorOutros?: any | null;
+  IniAutorDeputados?: Array<{ GP: string, idCadastro: string, nome: string }> | null;
 }
 
 export interface FormattedProposal {
   id: string;
   title: string;
   type: string;
+  descType?: string;
   number: string;
   status: string;
   date: string;
@@ -130,14 +158,70 @@ export interface FormattedProposal {
   documents: Document[];
   phases: Phase[];
   relatedProposals?: RelatedProposal[];
-  textLink: string | null; // Add this new field
+  textLink: string | null;
 }
 
 export interface ApiResponse {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: Proposal[];
+  data: Array<{
+    _id: string;
+    IniId: string;
+    IniLeg: string;
+    IniNr: string;
+    IniTipo: string;
+    IniDescTipo: string;
+    IniTitulo: string;
+    DataInicioleg: string;
+    DataFimleg: string | null;
+    IniAutorGruposParlamentares: Array<{ GP: string }> | null;
+    IniAutorDeputados: Array<{ GP: string, idCadastro: string, nome: string }> | null;
+    IniAutorOutros?: { 
+      nome: string;
+      sigla: string;
+      iniAutorComissao: string | null;
+    } | Array<{
+      nome: string;
+      sigla: string;
+      iniAutorComissao: string | null;
+    }> | null;
+    IniEventos: Array<{
+      EvtId: string;
+      Fase: string;
+      DataFase: string;
+      CodigoFase: string;
+      PublicacaoFase: string | null;
+      _id: string;
+      ObsFase: string | null;
+      OevId: string;
+      Comissao?: Array<{
+        AccId: string;
+        Competente: string;
+        DataDistribuicao: string;
+        IdComissao: string;
+        Nome: string;
+      }>;
+    }>;
+    IniLinkTexto: string;
+    lastUpdated: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
+  filters: {
+    types: string[];
+    authors: string[];
+    dateStart: string | null;
+    dateEnd: string | null;
+    updatedSince: string | null;
+  };
+  sort: {
+    field: string;
+    order: string;
+  };
 }
 
 export interface GroupedAuthors {
@@ -175,6 +259,7 @@ export interface FilterState {
   types: string[];
   phases: string[];
   authors: string[];
+  parties: string[];
   dateRange?: {
     from: Date;
     to?: Date;

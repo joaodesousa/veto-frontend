@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ProposalCard } from "@/components/proposal-card"
 import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Separator } from "@/components/ui/separator"
 import { ProposalFilters } from "@/components/proposal-filters"
@@ -17,29 +16,49 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { ProposalCardSkeleton } from "@/components/proposal-skeleton" 
 import { FilterSkeleton } from "@/components/filter-skeleton"
 
-import { fetchProposals, fetchTypes, fetchPhases, fetchAuthors } from "@/lib/api"
-import { Proposal, Author } from "@/lib/types"
+import { fetchProposals, fetchTypes, fetchPhases, fetchAuthors, fetchParties } from "@/lib/api"
+import { Proposal, Author, ApiResponse } from "@/lib/types"
+import { useUrlState } from "@/app/hooks/use-url-state"
 
 export default function PropostasPage() {
+  // Get URL state handling functions
+  const {
+    getInitialPage,
+    getInitialSearch,
+    getInitialFilters,
+    updateUrl
+  } = useUrlState()
+
+  // Initialize states from URL
+  const initialFilters = getInitialFilters()
+  const initialPage = getInitialPage()
+
   // State for managing proposals and pagination
-  const [proposals, setProposals] = useState<Proposal[]>([])
+  const [proposals, setProposals] = useState<any[]>([])
   const [totalProposals, setTotalProposals] = useState(0)
-  const [currentPage, setCurrentPage] = useState(1)
+  const [currentPage, setCurrentPage] = useState(initialPage)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Debug log to track page changes
+  useEffect(() => {
+    console.log(`Page changed to: ${currentPage}, initial page was: ${initialPage}`);
+  }, [currentPage, initialPage])
 
-  // Filtering and search states
-  const [searchTerm, setSearchTerm] = useState("")
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("")
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([])
-  const [selectedPhases, setSelectedPhases] = useState<string[]>([])
-  const [selectedAuthors, setSelectedAuthors] = useState<string[]>([])
-  const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  // Filtering and search states - initialized from URL
+  const [searchTerm, setSearchTerm] = useState(getInitialSearch())
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(getInitialSearch())
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(initialFilters.types || [])
+  const [selectedPhases, setSelectedPhases] = useState<string[]>(initialFilters.phases || [])
+  const [selectedAuthors, setSelectedAuthors] = useState<string[]>(initialFilters.authors || [])
+  const [selectedParties, setSelectedParties] = useState<string[]>(initialFilters.parties || [])
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(initialFilters.dateRange)
   
   // Filter options data
   const [allTypes, setAllTypes] = useState<string[]>([])
   const [allPhases, setAllPhases] = useState<string[]>([])
   const [allAuthors, setAllAuthors] = useState<Author[]>([])
+  const [allParties, setAllParties] = useState<Author[]>([])
   const [filterDataReady, setFilterDataReady] = useState(false)
   const [filterOptionsError, setFilterOptionsError] = useState<string | null>(null)
 
@@ -65,15 +84,47 @@ export default function PropostasPage() {
     }
   }, [searchTerm, debouncedSetSearch])
 
+  // Update URL when relevant state changes
+  useEffect(() => {
+    // Only update URL after initial load is complete to avoid unnecessary navigation
+    if (initialLoadComplete) {
+      updateUrl({
+        page: currentPage,
+        search: debouncedSearchTerm,
+        filters: {
+          types: selectedTypes,
+          phases: selectedPhases,
+          authors: selectedAuthors,
+          parties: selectedParties,
+          dateRange: dateRange ? {
+            from: dateRange.from as Date,
+            to: dateRange.to
+          } : undefined
+        }
+      })
+    }
+  }, [
+    initialLoadComplete,
+    currentPage, 
+    debouncedSearchTerm, 
+    selectedTypes, 
+    selectedPhases, 
+    selectedAuthors, 
+    selectedParties,
+    dateRange,
+    updateUrl
+  ])
+
   // First, fetch filter data
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
         // Fetch all filter options in parallel
-        const [typesData, phasesData, authorsData] = await Promise.all([
+        const [typesData, phasesData, authorsData, partiesData] = await Promise.all([
           fetchTypes(),
           fetchPhases(),
           fetchAuthors(),
+          fetchParties(),
         ]);
         
         // Safely handle types data - ensure it's an array
@@ -100,6 +151,14 @@ export default function PropostasPage() {
           setAllAuthors([]);
         }
         
+        // Safely handle parties data - ensure it's an array
+        if (Array.isArray(partiesData)) {
+          setAllParties(partiesData);
+        } else {
+          console.warn("Parties data is not an array:", partiesData);
+          setAllParties([]);
+        }
+        
         setFilterDataReady(true);
       } catch (err) {
         setFilterOptionsError("Failed to load filter options");
@@ -119,17 +178,24 @@ export default function PropostasPage() {
     const fetchInitialProposals = async () => {
       setLoading(true);
       try {
+        // Use the URL values during the initial load
+        const urlPage = getInitialPage();
+        
         const response = await fetchProposals({
-          page: currentPage,
+          page: urlPage, // Use the URL page rather than the state
           search: debouncedSearchTerm,
           types: selectedTypes,
           phases: selectedPhases,
           authors: selectedAuthors,
-          dateRange
+          parties: selectedParties,
+          dateRange: dateRange ? {
+            from: dateRange.from as Date,
+            to: dateRange.to
+          } : undefined
         });
         
-        setProposals(response.results);
-        setTotalProposals(response.count);
+        setProposals(response.data || []);
+        setTotalProposals(response.pagination?.total || 0);
         setInitialLoadComplete(true);
       } catch (err) {
         setError("Failed to load proposals");
@@ -143,11 +209,12 @@ export default function PropostasPage() {
   }, [
     filterDataReady, 
     initialLoadComplete, 
-    currentPage, 
+    getInitialPage, 
     debouncedSearchTerm, 
     selectedTypes, 
     selectedPhases, 
     selectedAuthors, 
+    selectedParties,
     dateRange, 
   ]);
 
@@ -164,11 +231,15 @@ export default function PropostasPage() {
           types: selectedTypes,
           phases: selectedPhases,
           authors: selectedAuthors,
-          dateRange,
+          parties: selectedParties,
+          dateRange: dateRange ? {
+            from: dateRange.from as Date,
+            to: dateRange.to
+          } : undefined,
         });
         
-        setProposals(response.results);
-        setTotalProposals(response.count);
+        setProposals(response.data || []);
+        setTotalProposals(response.pagination?.total || 0);
       } catch (err) {
         setError("Failed to load proposals");
         console.error("Error fetching proposals:", err);
@@ -185,17 +256,25 @@ export default function PropostasPage() {
     selectedTypes, 
     selectedPhases, 
     selectedAuthors, 
+    selectedParties,
     dateRange,
   ]);
   
 
-  const handleFiltersChange = useCallback((types: string[], phases: string[], authors: string[], dateRangeValue: DateRange | undefined) => {
+  // Skip the page reset on initial render, only reset page on user-initiated filter changes
+  const handleFiltersChange = useCallback((types: string[], phases: string[], authors: string[], parties: string[], dateRangeValue: DateRange | undefined) => {
     setSelectedTypes(types);
     setSelectedPhases(phases);
     setSelectedAuthors(authors);
+    setSelectedParties(parties);
     setDateRange(dateRangeValue);
-    setCurrentPage(1); // Reset to first page when filters change
-  }, []);
+    
+    // Only reset the page to 1 if we've already completed the initial load
+    // This prevents resetting during initialization from URL params
+    if (initialLoadComplete) {
+      setCurrentPage(1); // Reset to first page when filters change (but only after initial load)
+    }
+  }, [initialLoadComplete]);
 
   // Function to remove a filter
   const removeFilter = (filterType: string, value: string) => {
@@ -209,6 +288,9 @@ export default function PropostasPage() {
         break
       case 'authors':
         setSelectedAuthors(prev => prev.filter(author => author !== value))
+        break
+      case 'parties':
+        setSelectedParties(prev => prev.filter(party => party !== value))
         break
     }
   }
@@ -268,10 +350,12 @@ export default function PropostasPage() {
                         allTypes={allTypes}
                         allPhases={allPhases}
                         allAuthors={allAuthors}
-                        onFiltersChange={(types, phases, authors, dateRange) => {
+                        allParties={allParties}
+                        onFiltersChange={(types, phases, authors, parties, dateRange) => {
                           setSelectedTypes(types);
                           setSelectedPhases(phases);
                           setSelectedAuthors(authors);
+                          setSelectedParties(parties);
                           setDateRange(dateRange);
                           setCurrentPage(1); // Reset to first page when filters change
                         }}
@@ -293,6 +377,7 @@ export default function PropostasPage() {
                     allTypes={allTypes}
                     allPhases={allPhases}
                     allAuthors={allAuthors}
+                    allParties={allParties}
                     onFiltersChange={handleFiltersChange}
                   />
                 )}
@@ -309,6 +394,68 @@ export default function PropostasPage() {
                   )}
                 </div>
 
+                {/* Active Filters Display */}
+                {(selectedTypes.length > 0 || selectedPhases.length > 0 || selectedAuthors.length > 0 || selectedParties.length > 0 || dateRange?.from) && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {selectedTypes.map(type => (
+                      <Badge key={`type-${type}`} variant="secondary" className="gap-1">
+                        {type}
+                        <button 
+                          className="ml-1 rounded-full hover:bg-muted"
+                          onClick={() => removeFilter('types', type)}
+                        >
+                          ✕
+                        </button>
+                      </Badge>
+                    ))}
+                    {selectedPhases.map(phase => (
+                      <Badge key={`phase-${phase}`} variant="secondary" className="gap-1">
+                        {phase}
+                        <button 
+                          className="ml-1 rounded-full hover:bg-muted"
+                          onClick={() => removeFilter('phases', phase)}
+                        >
+                          ✕
+                        </button>
+                      </Badge>
+                    ))}
+                    {selectedAuthors.map(author => (
+                      <Badge key={`author-${author}`} variant="secondary" className="gap-1">
+                        {author}
+                        <button 
+                          className="ml-1 rounded-full hover:bg-muted"
+                          onClick={() => removeFilter('authors', author)}
+                        >
+                          ✕
+                        </button>
+                      </Badge>
+                    ))}
+                    {selectedParties.map(party => (
+                      <Badge key={`party-${party}`} variant="secondary" className="gap-1">
+                        {party}
+                        <button 
+                          className="ml-1 rounded-full hover:bg-muted"
+                          onClick={() => removeFilter('parties', party)}
+                        >
+                          ✕
+                        </button>
+                      </Badge>
+                    ))}
+                    {dateRange?.from && (
+                      <Badge variant="secondary" className="gap-1">
+                        {dateRange.from.toLocaleDateString('pt-PT')}
+                        {dateRange.to && ` - ${dateRange.to.toLocaleDateString('pt-PT')}`}
+                        <button 
+                          className="ml-1 rounded-full hover:bg-muted"
+                          onClick={() => setDateRange(undefined)}
+                        >
+                          ✕
+                        </button>
+                      </Badge>
+                    )}
+                  </div>
+                )}
+
                 {/* Proposals Grid - Shows skeletons while loading */}
                 {loading ? (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -319,62 +466,47 @@ export default function PropostasPage() {
                 ) : proposals.length > 0 ? (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {proposals.map((proposal) => {
-                      // Safely extract the latest phase name
-                      const latestPhase = proposal.phases && Array.isArray(proposal.phases) && proposal.phases.length > 0
-                        ? proposal.phases[proposal.phases.length - 1]
+                      // Extract the proposal data from the API response
+                      const latestEvent = proposal.IniEventos && Array.isArray(proposal.IniEventos) && proposal.IniEventos.length > 0
+                        ? proposal.IniEventos[proposal.IniEventos.length - 1]
                         : null;
                       
-                      const phaseDisplay = latestPhase 
-                        ? (typeof latestPhase === 'string' ? latestPhase : (latestPhase.name || 'Sem estado'))
-                        : 'Sem estado';
+                      const phaseDisplay = latestEvent?.Fase || 'Sem estado';
                       
-                      // Safely extract the party/author
+                      // Extract party/author information
                       let partyDisplay = "Desconhecido";
-                      if (proposal.authors && Array.isArray(proposal.authors)) {
-                        // First try to find a "Grupo" type author
-                        const partyAuthor = proposal.authors.find(a => 
-                          a && typeof a === 'object' && a.author_type === "Grupo"
-                        );
-                        
-                        if (partyAuthor) {
-                          partyDisplay = typeof partyAuthor.name === 'string' ? partyAuthor.name : "Desconhecido";
-                        } else {
-                          // If no party, try to find "Outro" type
-                          const otherAuthor = proposal.authors.find(a => 
-                            a && typeof a === 'object' && a.author_type === "Outro"
-                          );
-                          
-                          if (otherAuthor) {
-                            partyDisplay = typeof otherAuthor.name === 'string' ? otherAuthor.name : "Desconhecido";
-                          }
-                        }
+                      if (proposal.IniAutorGruposParlamentares && Array.isArray(proposal.IniAutorGruposParlamentares) && proposal.IniAutorGruposParlamentares.length > 0) {
+                        partyDisplay = proposal.IniAutorGruposParlamentares[0].GP || "Desconhecido";
+                      } else if (proposal.IniAutorOutros?.nome) {
+                        partyDisplay = proposal.IniAutorOutros.nome;
                       }
                       
                       // Get the earliest phase date if available
-              const firstPhaseDate = (() => {
-                if (proposal.phases && Array.isArray(proposal.phases) && proposal.phases.length > 0) {
-                  // Sort phases by date (oldest first)
-                  const sortedPhases = [...proposal.phases].sort((a, b) => {
-                    return new Date(b.date).getTime() - new Date(a.date).getTime();
-                  });
-                  // Return the date of the earliest phase
-                  return sortedPhases[0].date;
-                }
-                // Fallback to proposal date if no phases available
-                return proposal.date;
-              })();
-              
-              return (
-                <ProposalCard
-                  key={proposal.id}
-                  title={proposal.title}
-                  number={proposal.external_id}
-                  status={phaseDisplay}
-                  date={firstPhaseDate}
-                  party={partyDisplay}
-                  type={proposal.type}
-                />
-              );
+                      const firstPhaseDate = (() => {
+                        if (proposal.IniEventos && Array.isArray(proposal.IniEventos) && proposal.IniEventos.length > 0) {
+                          // Sort events by date (oldest first)
+                          const sortedEvents = [...proposal.IniEventos].sort((a, b) => {
+                            return new Date(a.DataFase).getTime() - new Date(b.DataFase).getTime();
+                          });
+                          // Return the date of the earliest phase
+                          return sortedEvents[0].DataFase;
+                        }
+                        // Fallback to proposal date
+                        return proposal.DataInicioleg;
+                      })();
+                      
+                      return (
+                        <ProposalCard
+                          key={proposal._id}
+                          title={proposal.IniTitulo}
+                          number={proposal.IniNr}
+                          status={phaseDisplay}
+                          date={firstPhaseDate}
+                          party={partyDisplay}
+                          type={proposal.IniDescTipo}
+                          iniId={proposal.IniId}
+                        />
+                      );
                     })}
                   </div>
                 ) : (
@@ -396,8 +528,11 @@ export default function PropostasPage() {
                   <Pagination 
                     className="mt-8" 
                     currentPage={currentPage}
-                    totalPages={Math.ceil(totalProposals / 10)}
-                    onPageChange={(page) => setCurrentPage(page)}
+                    totalPages={Math.ceil(totalProposals / 20)}
+                    onPageChange={(page) => {
+                      console.log(`User clicked to navigate to page: ${page}`);
+                      setCurrentPage(page);
+                    }}
                   />
                 )}
               </div>

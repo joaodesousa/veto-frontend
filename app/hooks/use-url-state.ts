@@ -22,9 +22,10 @@ export function useUrlState() {
     const initialTypes = searchParams.get('types')?.split(',') || []
     const initialPhases = searchParams.get('phases')?.split(',') || []
     const initialAuthors = searchParams.get('authors')?.split(',') || []
+    const initialParties = searchParams.get('partido')?.split(',') || []
     
     // Parse date range if present
-    let initialDateRange: DateRange | undefined = undefined
+    let initialDateRange: { from: Date; to?: Date } | undefined = undefined
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
     
@@ -39,6 +40,7 @@ export function useUrlState() {
       types: initialTypes,
       phases: initialPhases,
       authors: initialAuthors,
+      parties: initialParties,
       dateRange: initialDateRange,
     }
   }, [searchParams])
@@ -62,6 +64,7 @@ export function useUrlState() {
     if (params.filters.types.length > 0) urlParams.set('types', params.filters.types.join(','))
     if (params.filters.phases.length > 0) urlParams.set('phases', params.filters.phases.join(','))
     if (params.filters.authors.length > 0) urlParams.set('authors', params.filters.authors.join(','))
+    if (params.filters.parties.length > 0) urlParams.set('partido', params.filters.parties.join(','))
     
     if (params.filters.dateRange?.from) {
       urlParams.set('startDate', params.filters.dateRange.from.toISOString().split('T')[0])

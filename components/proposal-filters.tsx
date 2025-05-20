@@ -18,10 +18,12 @@ interface ProposalFiltersProps {
   allTypes: string[] | any[];
   allPhases: string[] | any[];
   allAuthors: Author[];
+  allParties: Author[];
   onFiltersChange: (
     types: string[], 
     phases: string[], 
     authors: string[], 
+    parties: string[],
     dateRange: DateRange | undefined
   ) => void
 }
@@ -30,12 +32,14 @@ export function ProposalFilters({
   allTypes,
   allPhases,
   allAuthors,
+  allParties,
   onFiltersChange 
 }: ProposalFiltersProps) {
   // Filter states
   const [selectedPhases, setSelectedPhases] = React.useState<string[]>([]);
   const [selectedParties, setSelectedParties] = React.useState<string[]>([]);
   const [selectedTopics, setSelectedTopics] = React.useState<string[]>([]);
+  const [selectedAuthors, setSelectedAuthors] = React.useState<string[]>([]);
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>(undefined);
   
   // Flag to avoid the initial onFiltersChange call
@@ -90,21 +94,16 @@ export function ProposalFilters({
     return String(type || '');
   };
   
-  // Extract only parties (groups) from authors
+  // Extract party names from the provided parties
   const partyNames = React.useMemo(() => {
-    // Filter authors to only include those of type "Grupo" (parties)
-    const partyAuthors = allAuthors.filter(author => 
-      author && typeof author === 'object' && author.author_type === "Grupo"
-    );
-    
-    // Extract name property from each party author
-    const names = partyAuthors.map(author => 
-      typeof author.name === 'string' ? author.name : `Unknown Party ${author.id || ''}`
+    // Extract name property from each party
+    const names = allParties.map(party => 
+      typeof party.name === 'string' ? party.name : `Unknown Party ${party.id || ''}`
     );
     
     // Remove duplicates
     return [...new Set(names)];
-  }, [allAuthors]);
+  }, [allParties]);
 
   // Apply filters when they change
   React.useEffect(() => {
@@ -118,10 +117,11 @@ export function ProposalFilters({
     onFiltersChange(
       selectedTopics,
       selectedPhases,
+      selectedAuthors,
       selectedParties,
       dateRange
     );
-  }, [selectedPhases, selectedParties, selectedTopics, dateRange, onFiltersChange]);
+  }, [selectedPhases, selectedParties, selectedTopics, selectedAuthors, dateRange, onFiltersChange]);
 
   // Handler functions for updating filters - these explicitly set state
   const handleTopicChange = (topic: string, checked: boolean) => {
@@ -148,10 +148,19 @@ export function ProposalFilters({
     }
   };
 
+  const handleAuthorChange = (author: string, checked: boolean) => {
+    if (checked) {
+      setSelectedAuthors(prev => [...prev, author]);
+    } else {
+      setSelectedAuthors(prev => prev.filter(a => a !== author));
+    }
+  };
+
   // Clear filters functionality
   const clearPhases = () => setSelectedPhases([]);
   const clearParties = () => setSelectedParties([]);
   const clearTopics = () => setSelectedTopics([]);
+  const clearAuthors = () => setSelectedAuthors([]);
   const clearDate = () => setDateRange(undefined);
 
   // Clear all filters
@@ -159,6 +168,7 @@ export function ProposalFilters({
     clearPhases();
     clearParties();
     clearTopics();
+    clearAuthors();
     clearDate();
   };
 
@@ -166,6 +176,7 @@ export function ProposalFilters({
   const hasFilters = selectedPhases.length > 0 || 
                     selectedParties.length > 0 || 
                     selectedTopics.length > 0 || 
+                    selectedAuthors.length > 0 || 
                     !!dateRange?.from;
 
   return (

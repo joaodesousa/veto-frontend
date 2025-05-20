@@ -1,7 +1,7 @@
 import { HeroSection } from "@/components/hero-section"
 import { ProposalsSection } from "@/components/proposals-section"
 import { StatsSection } from "@/components/stats-section"
-import { getHomePageProposals, getDashboardStatistics } from "@/lib/server-api"
+import { getHomePageProposals, getStats } from "@/lib/server-api"
 
 
 export async function generateMetadata() {
@@ -26,7 +26,7 @@ export default async function Home() {
   // Fetch both proposals and statistics in parallel for better performance
   const [proposalsData, stats] = await Promise.all([
     getHomePageProposals(4),
-    getDashboardStatistics()
+    getStats()
   ]);
   
   const { proposals, totalCount } = proposalsData;

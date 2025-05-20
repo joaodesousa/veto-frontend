@@ -42,11 +42,11 @@ export async function generateMetadata({ params }: { params: { external_id: stri
   }
   
   return {
-    title: `${proposal.type} - ${proposal.title}`,
+    title: `${proposal.descType || proposal.type} - ${proposal.title}`,
     description: proposal.description || 'Sem descrição disponível',
     openGraph: {
       images: [{
-        url: `https://veto.pt/api/og?title=${encodeURIComponent(proposal.title)}&subtitle=${encodeURIComponent(`${proposal.type}`)}`,
+        url: `https://veto.pt/api/og?title=${encodeURIComponent(proposal.title)}&subtitle=${encodeURIComponent(`${proposal.descType || proposal.type}`)}`,
         width: 1200,
         height: 630,
       }]
@@ -64,7 +64,6 @@ export default async function ProposalDetailPage({ params }: { params: { externa
 
     // Format the proposal data for the UI
     const formattedProposal = formatProposalData(proposal)
-
     const firstPhaseDate = (() => {
       if (formattedProposal.phases && formattedProposal.phases.length > 0) {
         // Sort phases by date (oldest first)
@@ -112,26 +111,57 @@ export default async function ProposalDetailPage({ params }: { params: { externa
       comments: 32,
     }
 
+    // Directly use the raw API data stored in the proposal
     const partyDisplay = (() => {
-      if (proposal.authors && Array.isArray(proposal.authors)) {
-        // First try to find a "Grupo" type author
-        const partyAuthor = proposal.authors.find(a => 
-          a && typeof a === 'object' && a.author_type === "Grupo"
-        );
-
-        if (partyAuthor) {
-          return typeof partyAuthor.name === 'string' ? partyAuthor.name : "Desconhecido";
-        } else {
-          // If no party, try to find "Outro" type
-          const otherAuthor = proposal.authors.find(a => 
-            a && typeof a === 'object' && a.author_type === "Outro"
-          );
-
-          if (otherAuthor) {
-            return typeof otherAuthor.name === 'string' ? otherAuthor.name : "Desconhecido";
-          }
+      // First check if parliamentary groups are available (IniAutorGruposParlamentares)
+      if (proposal.IniAutorGruposParlamentares) {
+        if (Array.isArray(proposal.IniAutorGruposParlamentares) && proposal.IniAutorGruposParlamentares.length > 0) {
+          // Format parliamentary groups
+          return proposal.IniAutorGruposParlamentares
+            .map(group => group.GP || "")
+            .filter(Boolean)
+            .join(", ");
         }
       }
+      
+      // If no parliamentary groups, check for other authors (IniAutorOutros)
+      if (proposal.IniAutorOutros) {
+        if (Array.isArray(proposal.IniAutorOutros) && proposal.IniAutorOutros.length > 0) {
+          // Handle when IniAutorOutros is an array
+          return proposal.IniAutorOutros
+            .map(other => other.nome || other.sigla || "")
+            .filter(Boolean)
+            .join(", ");
+        } else if (typeof proposal.IniAutorOutros === 'object') {
+          // Handle when IniAutorOutros is a single object
+          return proposal.IniAutorOutros.nome || proposal.IniAutorOutros.sigla || "Desconhecido";
+        }
+      }
+      
+      // Fallback to using the processed authors array
+      if (proposal.authors && Array.isArray(proposal.authors) && proposal.authors.length > 0) {
+        // Group by author_type
+        const authorsByType = proposal.authors.reduce((acc, author) => {
+          const type = author.author_type || 'Unknown';
+          if (!acc[type]) acc[type] = [];
+          acc[type].push(author);
+          return acc;
+        }, {} as Record<string, typeof proposal.authors>);
+        
+        // Prefer Grupo authors, then Outro authors
+        if (authorsByType['Grupo']?.length > 0) {
+          return authorsByType['Grupo']
+            .map(a => a.name || "")
+            .filter(Boolean)
+            .join(", ");
+        } else if (authorsByType['Outro']?.length > 0) {
+          return authorsByType['Outro']
+            .map(a => a.name || "")
+            .filter(Boolean)
+            .join(", ");
+        }
+      }
+      
       return "Desconhecido"; // Fallback if no authors found
     })();
 
@@ -168,7 +198,7 @@ export default async function ProposalDetailPage({ params }: { params: { externa
               <div className="flex flex-col sm:flex-row gap-4 text-sm text-white/80">
                 <div className="flex items-center">
                   <FileText className="mr-2 h-4 w-4" />
-                  {formattedProposal.type}
+                  {formattedProposal.descType || formattedProposal.type}
                 </div>
                 <div className="flex items-center">
                   <Calendar className="mr-2 h-4 w-4" />
@@ -176,7 +206,26 @@ export default async function ProposalDetailPage({ params }: { params: { externa
                 </div>
                 <div className="flex items-center">
                   <Users className="mr-2 h-4 w-4" />
-                  {formattedProposal.authors.length} autor{formattedProposal.authors.length !== 1 ? "es" : ""}
+                  {(() => {
+                    // First check if IniAutorDeputados exists
+                    if (proposal.IniAutorDeputados && Array.isArray(proposal.IniAutorDeputados)) {
+                      const count = proposal.IniAutorDeputados.length;
+                      return `${count} autor${count !== 1 ? 'es' : ''}`;
+                    }
+                    // If no deputies, check IniAutorOutros
+                    else if (proposal.IniAutorOutros) {
+                      // Handle both array and single object formats
+                      const count = Array.isArray(proposal.IniAutorOutros) 
+                        ? proposal.IniAutorOutros.length 
+                        : 1;
+                      return `${count} autor${count !== 1 ? 'es' : ''}`;
+                    }
+                    // Fallback to the processed authors array
+                    else {
+                      const count = formattedProposal.authors.length;
+                      return `${count} autor${count !== 1 ? 'es' : ''}`;
+                    }
+                  })()}
                 </div>
               </div>
             </div>

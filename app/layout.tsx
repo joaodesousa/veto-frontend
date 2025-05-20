@@ -11,6 +11,7 @@ import { Toaster } from "@/components/ui/sonner"
 export const metadata: Metadata = {
   title: "Veto | Acompanhamento Legislativo",
   description: "Acompanhe propostas legislativas no Parlamento Português",
+  metadataBase: new URL('https://veto.pt'),
 }
 
 export default function RootLayout({

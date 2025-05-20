@@ -12,9 +12,10 @@ interface ProposalCardProps {
   date: string
   party: string
   type: string
+  iniId?: string
 }
 
-export function ProposalCard({ title, number, status, date, party, type }: ProposalCardProps) {
+export function ProposalCard({ title, number, status, date, party, type, iniId }: ProposalCardProps) {
   // Ensure party and type are not empty
   const displayParty = party
 
@@ -47,7 +48,7 @@ export function ProposalCard({ title, number, status, date, party, type }: Propo
       </CardContent>
       <CardFooter className="p-4 pt-0 mt-auto">
         <Button variant="ghost" size="sm" className="gap-1 ml-auto" asChild>
-          <a href={`/propostas/${number}`}>
+          <a href={`/propostas/${iniId || number}`}>
             Ver detalhes
             <ArrowRight className="h-3 w-3" />
           </a>

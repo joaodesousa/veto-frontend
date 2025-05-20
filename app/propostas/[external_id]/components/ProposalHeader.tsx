@@ -22,8 +22,9 @@ interface ProposalHeaderProps {
 }
 
 export function ProposalHeader({ proposal }: ProposalHeaderProps) {
-  const type = proposal.type || proposal.number.split(' ')[0];
-  
+  // Use descType if available, otherwise fall back to type or the first part of number
+  const type = proposal.descType || proposal.type || proposal.number.split(' ')[0];
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-3xl font-bold">{proposal.title}</h1>

@@ -83,7 +83,7 @@ export function ProposalVoting({ votes }: ProposalVotingProps) {
             <p className="text-muted-foreground">Não há informações de votação disponíveis.</p>
           </div>
         ) : (
-          <Accordion type="single" collapsible defaultValue={`vote-${voteRecords.length - 1}`}>
+          <Accordion type="single" collapsible>
             {voteRecords.map((currentVote, index) => (
               <AccordionItem key={index} value={`vote-${index}`}>
                 <AccordionTrigger>
