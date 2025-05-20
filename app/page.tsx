@@ -4,24 +4,6 @@ import { Header } from "@/components/header"
 import Link from "next/link"
 
 
-export async function generateMetadata() {
-  
-  const title ="VETO"
-  const description = "Descubra como os deputados votam em temas que importam para si. Acompanhe, compare e participe na democracia portuguesa."
-
-  return {
-    title: title,
-    description: description,
-    openGraph: {
-      images: [{
-        url: `https://veto.pt/api/og?title=${title}&description=${description}`,
-        width: 1200,
-        height: 630,
-      }]
-    }
-  }
-}
-
 export default async function Home() {
   // Party data with their colors
   const parties = [
