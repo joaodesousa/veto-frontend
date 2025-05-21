@@ -141,10 +141,9 @@ function ProposalsContent() {
         
         // Safely handle legislaturas data
         if (Array.isArray(legislaturasData)) {
-          // Filter out null/undefined values and reverse the array to invert the order
+          // Filter out null/undefined values
           setAllLegislaturas(legislaturasData
-            .filter((legislatura) => legislatura !== null && legislatura !== undefined)
-            .reverse());
+            .filter((legislatura) => legislatura !== null && legislatura !== undefined));
         } else {
           console.warn("Legislaturas data is not an array:", legislaturasData);
           setAllLegislaturas([]);
