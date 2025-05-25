@@ -1,5 +1,5 @@
 "use client"
-import { Filter, Search } from "lucide-react"
+import { Filter, Search, X } from "lucide-react"
 import { useState, useEffect, useCallback, Suspense } from "react"
 import type { DateRange } from "react-day-picker"
 import { debounce } from "lodash"
@@ -8,13 +8,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ProposalCard } from "@/components/proposal-card"
 import { Badge } from "@/components/ui/badge"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose, SheetFooter } from "@/components/ui/sheet"
 import { Separator } from "@/components/ui/separator"
 import { ProposalFilters } from "@/components/proposal-filters"
 import { Pagination } from "@/components/pagination"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ProposalCardSkeleton } from "@/components/proposal-skeleton" 
 import { FilterSkeleton } from "@/components/filter-skeleton"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 import { fetchProposals, fetchTypes, fetchPhases, fetchAuthors, fetchParties, fetchLegislaturas } from "@/lib/api"
 import { Proposal, Author, ApiResponse } from "@/lib/types"
@@ -367,37 +368,54 @@ function ProposalsContent() {
                       <Filter className="h-4 w-4" />
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="left" className="w-full sm:w-[360px]">
-                    <SheetHeader>
+                  <SheetContent side="left" className="w-full sm:w-[360px] flex flex-col">
+                    <SheetHeader className="shrink-0 flex-row items-center justify-between">
                       <SheetTitle>Filtros</SheetTitle>
+                      <SheetClose asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
+                          <X className="h-4 w-4" />
+                          <span className="sr-only">Fechar filtros</span>
+                        </Button>
+                      </SheetClose>
                     </SheetHeader>
-                    <Separator className="my-4" />
-                    {!filterDataReady ? (
-                      <FilterSkeleton />
-                    ) : (
-                      <ProposalFilters 
-                        allLegislaturas={allLegislaturas}
-                        allTypes={allTypes}
-                        allPhases={allPhases}
-                        allAuthors={allAuthors}
-                        allParties={allParties}
-                        initialLegislaturas={selectedLegislaturas}
-                        initialTypes={selectedTypes}
-                        initialPhases={selectedPhases}
-                        initialAuthors={selectedAuthors}
-                        initialParties={selectedParties}
-                        initialDateRange={dateRange}
-                        onFiltersChange={(legislaturas, types, phases, authors, parties, dateRange) => {
-                          setSelectedLegislaturas(legislaturas);
-                          setSelectedTypes(types);
-                          setSelectedPhases(phases);
-                          setSelectedAuthors(authors);
-                          setSelectedParties(parties);
-                          setDateRange(dateRange);
-                          setCurrentPage(1); // Reset to first page when filters change
-                        }}
-                      />
-                    )}
+                    <Separator className="my-4 shrink-0" />
+                    <div className="flex-1 overflow-hidden">
+                      {!filterDataReady ? (
+                        <FilterSkeleton />
+                      ) : (
+                        <ScrollArea className="h-full pr-4">
+                          <ProposalFilters 
+                            allLegislaturas={allLegislaturas}
+                            allTypes={allTypes}
+                            allPhases={allPhases}
+                            allAuthors={allAuthors}
+                            allParties={allParties}
+                            initialLegislaturas={selectedLegislaturas}
+                            initialTypes={selectedTypes}
+                            initialPhases={selectedPhases}
+                            initialAuthors={selectedAuthors}
+                            initialParties={selectedParties}
+                            initialDateRange={dateRange}
+                            onFiltersChange={(legislaturas, types, phases, authors, parties, dateRange) => {
+                              setSelectedLegislaturas(legislaturas);
+                              setSelectedTypes(types);
+                              setSelectedPhases(phases);
+                              setSelectedAuthors(authors);
+                              setSelectedParties(parties);
+                              setDateRange(dateRange);
+                              setCurrentPage(1); // Reset to first page when filters change
+                            }}
+                          />
+                        </ScrollArea>
+                      )}
+                    </div>
+                    <SheetFooter className="shrink-0 pt-4">
+                      <SheetClose asChild>
+                        <Button className="w-full">
+                          Aplicar Filtros
+                        </Button>
+                      </SheetClose>
+                    </SheetFooter>
                   </SheetContent>
                 </Sheet>
               </div>

@@ -195,37 +195,39 @@ export default async function ProposalDetailPage({ params }: { params: { externa
                 </Badge>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold">{formattedProposal.title}</h1>
-              <div className="flex flex-col sm:flex-row gap-4 text-sm text-white/80">
+              <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-white/80">
                 <div className="flex items-center">
-                  <FileText className="mr-2 h-4 w-4" />
-                  {formattedProposal.descType || formattedProposal.type}
+                  <FileText className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="truncate">{formattedProposal.descType || formattedProposal.type}</span>
                 </div>
                 <div className="flex items-center">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  {firstPhaseDate}
+                  <Calendar className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="truncate">{firstPhaseDate}</span>
                 </div>
                 <div className="flex items-center">
-                  <Users className="mr-2 h-4 w-4" />
-                  {(() => {
-                    // First check if IniAutorDeputados exists
-                    if (proposal.IniAutorDeputados && Array.isArray(proposal.IniAutorDeputados)) {
-                      const count = proposal.IniAutorDeputados.length;
-                      return `${count} autor${count !== 1 ? 'es' : ''}`;
-                    }
-                    // If no deputies, check IniAutorOutros
-                    else if (proposal.IniAutorOutros) {
-                      // Handle both array and single object formats
-                      const count = Array.isArray(proposal.IniAutorOutros) 
-                        ? proposal.IniAutorOutros.length 
-                        : 1;
-                      return `${count} autor${count !== 1 ? 'es' : ''}`;
-                    }
-                    // Fallback to the processed authors array
-                    else {
-                      const count = formattedProposal.authors.length;
-                      return `${count} autor${count !== 1 ? 'es' : ''}`;
-                    }
-                  })()}
+                  <Users className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="truncate">
+                    {(() => {
+                      // First check if IniAutorDeputados exists
+                      if (proposal.IniAutorDeputados && Array.isArray(proposal.IniAutorDeputados)) {
+                        const count = proposal.IniAutorDeputados.length;
+                        return `${count} autor${count !== 1 ? 'es' : ''}`;
+                      }
+                      // If no deputies, check IniAutorOutros
+                      else if (proposal.IniAutorOutros) {
+                        // Handle both array and single object formats
+                        const count = Array.isArray(proposal.IniAutorOutros) 
+                          ? proposal.IniAutorOutros.length 
+                          : 1;
+                        return `${count} autor${count !== 1 ? 'es' : ''}`;
+                      }
+                      // Fallback to the processed authors array
+                      else {
+                        const count = formattedProposal.authors.length;
+                        return `${count} autor${count !== 1 ? 'es' : ''}`;
+                      }
+                    })()}
+                  </span>
                 </div>
               </div>
             </div>
@@ -331,7 +333,13 @@ export default async function ProposalDetailPage({ params }: { params: { externa
             {/* Right Column */}
             <div className="space-y-6">
               {/* Current Status Card - This is replaced by ProposalSidebar */}
-              <ProposalSidebar proposal={formattedProposal} />
+              <ProposalSidebar 
+                proposal={formattedProposal}
+                authors={formattedProposal.authors}
+                IniAutorDeputados={proposal.IniAutorDeputados}
+                IniAutorGruposParlamentares={proposal.IniAutorGruposParlamentares}
+                IniAutorOutros={proposal.IniAutorOutros}
+              />
 
               {/* Related Proposals Card */}
               {formattedProposal.relatedProposals && formattedProposal.relatedProposals.length > 0 && (

@@ -1,14 +1,17 @@
 "use client"
 
 import * as React from "react"
-import { Calendar } from "lucide-react"
+import { Calendar, Search, Check, ChevronsUpDown } from "lucide-react"
 import type { DateRange } from "react-day-picker"
 import { useState, useEffect, useRef } from "react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Separator } from "@/components/ui/separator"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -66,14 +69,60 @@ export function ProposalFilters({
     }
     return [];
   });
-  const [selectedPhases, setSelectedPhases] = React.useState<string[]>(initialPhases);
   const [selectedParties, setSelectedParties] = React.useState<string[]>(initialParties);
   const [selectedTopics, setSelectedTopics] = React.useState<string[]>(initialTypes);
   const [selectedAuthors, setSelectedAuthors] = React.useState<string[]>(initialAuthors);
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>(initialDateRange);
   
+  // Search state for phases - now just a single selected phase
+  const [selectedPhase, setSelectedPhase] = React.useState<string>(() => {
+    return initialPhases && initialPhases.length > 0 ? initialPhases[0] : "";
+  });
+  const [phaseDropdownOpen, setPhaseDropdownOpen] = React.useState(false);
+  
   // Flag to avoid the initial onFiltersChange call
   const isInitialMount = useRef(true);
+  
+  // Store the latest callback to avoid infinite loops when it changes
+  const onFiltersChangeRef = useRef(onFiltersChange);
+  onFiltersChangeRef.current = onFiltersChange;
+  
+  // Sync internal state with props when they change (for badge removal, etc.)
+  React.useEffect(() => {
+    if (initialLegislaturas) {
+      setSelectedLegislaturas(initialLegislaturas);
+    }
+  }, [initialLegislaturas]);
+
+  React.useEffect(() => {
+    if (initialTypes) {
+      setSelectedTopics(initialTypes);
+    }
+  }, [initialTypes]);
+
+  React.useEffect(() => {
+    if (initialPhases) {
+      setSelectedPhase(initialPhases.length > 0 ? initialPhases[0] : "");
+    }
+  }, [initialPhases]);
+
+  React.useEffect(() => {
+    if (initialAuthors) {
+      setSelectedAuthors(initialAuthors);
+    }
+  }, [initialAuthors]);
+
+  React.useEffect(() => {
+    if (initialParties) {
+      setSelectedParties(initialParties);
+    }
+  }, [initialParties]);
+
+  React.useEffect(() => {
+    if (initialDateRange !== undefined) {
+      setDateRange(initialDateRange);
+    }
+  }, [initialDateRange]);
   
   // Helper function to extract display name from Legislatura 
   const extractLegislaturaName = (legislatura: any): string => {
@@ -170,16 +219,19 @@ export function ProposalFilters({
       return;
     }
     
-    // Only call with the raw values - no processing that could trigger new renders
-    onFiltersChange(
+    // Convert single phase to array for compatibility with existing API
+    const phasesArray = selectedPhase ? [selectedPhase] : [];
+    
+    // Use the ref to call the latest callback without including it in dependencies
+    onFiltersChangeRef.current(
       selectedLegislaturas,
       selectedTopics,
-      selectedPhases,
+      phasesArray, // Use the converted array
       selectedAuthors,
       selectedParties,
       dateRange
     );
-  }, [selectedLegislaturas, selectedPhases, selectedParties, selectedTopics, selectedAuthors, dateRange, onFiltersChange]);
+  }, [selectedLegislaturas, selectedTopics, selectedPhase, selectedAuthors, selectedParties, dateRange]);
 
   // Handle legislatura change
   const handleLegislaturaChange = (legislatura: string, checked: boolean) => {
@@ -196,14 +248,6 @@ export function ProposalFilters({
       setSelectedTopics(prev => [...prev, topic]);
     } else {
       setSelectedTopics(prev => prev.filter(t => t !== topic));
-    }
-  };
-  
-  const handlePhaseChange = (phase: string, checked: boolean) => {
-    if (checked) {
-      setSelectedPhases(prev => [...prev, phase]);
-    } else {
-      setSelectedPhases(prev => prev.filter(p => p !== phase));
     }
   };
   
@@ -225,7 +269,7 @@ export function ProposalFilters({
 
   // Clear filters functionality
   const clearLegislaturas = () => setSelectedLegislaturas([]);
-  const clearPhases = () => setSelectedPhases([]);
+  const clearPhases = () => setSelectedPhase("");
   const clearParties = () => setSelectedParties([]);
   const clearTopics = () => setSelectedTopics([]);
   const clearAuthors = () => setSelectedAuthors([]);
@@ -243,7 +287,7 @@ export function ProposalFilters({
 
   // Check if any filters are applied
   const hasFilters = selectedLegislaturas.length > 0 ||
-                    selectedPhases.length > 0 || 
+                    !!selectedPhase || 
                     selectedParties.length > 0 || 
                     selectedTopics.length > 0 || 
                     selectedAuthors.length > 0 || 
@@ -266,7 +310,7 @@ export function ProposalFilters({
             </Button>
           )}
         </div>
-        <ScrollArea className="h-[100px] pr-4">
+        <ScrollArea className="h-[80px] pr-4">
           <div className="space-y-3">
             {Array.isArray(allLegislaturas) && allLegislaturas.map((legislatura, index) => {
               // Extract the display name
@@ -316,7 +360,7 @@ export function ProposalFilters({
             </Button>
           )}
         </div>
-        <ScrollArea className="h-[200px] pr-4">
+        <ScrollArea className="h-[150px] pr-4">
           <div className="space-y-3">
             {Array.isArray(allTypes) && allTypes.map((topic, index) => {
               // Extract the display name from the topic
@@ -351,11 +395,11 @@ export function ProposalFilters({
 
       <Separator />
 
-      {/* Status/Phases Filter (Now with scroll) */}
+      {/* Status/Phases Filter - Searchable Dropdown */}
       <div>
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-sm font-medium">Estado</h3>
-          {selectedPhases.length > 0 && (
+          {selectedPhase && (
             <Button 
               variant="ghost" 
               size="sm" 
@@ -366,37 +410,69 @@ export function ProposalFilters({
             </Button>
           )}
         </div>
-        <ScrollArea className="h-[200px] pr-4">
-          <div className="space-y-3">
-            {Array.isArray(allPhases) && allPhases.map((phase, index) => {
-              // Extract the display name from the phase
-              const phaseStr = extractPhaseName(phase);
-              
-              // Create a unique key for this phase
-              const phaseKey = typeof phase === 'object' && phase.id ? 
-                String(phase.id) : 
-                (typeof phase === 'string' ? phase : `phase-${index}`);
-              
-              return (
-                <div key={`phase-${phaseKey}`} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={`phase-${index}`} 
-                    checked={selectedPhases.includes(phaseStr)}
-                    onCheckedChange={(checked) => {
-                      handlePhaseChange(phaseStr, !!checked);
-                    }}
-                  />
-                  <label
-                    htmlFor={`phase-${index}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        
+        <Popover open={phaseDropdownOpen} onOpenChange={setPhaseDropdownOpen}>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={phaseDropdownOpen}
+                    className="w-full justify-between"
                   >
-                    {phaseStr}
-                  </label>
-                </div>
-              );
-            })}
-          </div>
-        </ScrollArea>
+                    <span className="truncate text-left">
+                      {selectedPhase || "Selecionar estado..."}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+              </TooltipTrigger>
+              {selectedPhase && (
+                <TooltipContent>
+                  <p>{selectedPhase}</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
+          <PopoverContent className="w-[300px] p-0">
+            <Command>
+              <CommandInput placeholder="Pesquisar estados..." />
+              <CommandList>
+                <CommandEmpty>Nenhum estado encontrado.</CommandEmpty>
+                <CommandGroup>
+                  {Array.isArray(allPhases) && allPhases.map((phase, index) => {
+                    const phaseStr = extractPhaseName(phase);
+                    const phaseKey = typeof phase === 'object' && phase.id ? 
+                      String(phase.id) : 
+                      (typeof phase === 'string' ? phase : `phase-${index}`);
+                    
+                    return (
+                      <CommandItem
+                        key={`phase-${phaseKey}`}
+                        value={phaseStr}
+                        onSelect={(currentValue) => {
+                          setSelectedPhase(currentValue === selectedPhase ? "" : currentValue);
+                          setPhaseDropdownOpen(false);
+                        }}
+                        className="flex items-start"
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4 mt-0.5 shrink-0",
+                            selectedPhase === phaseStr ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        <span className="break-words">{phaseStr}</span>
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       </div>
 
       <Separator />
@@ -417,7 +493,7 @@ export function ProposalFilters({
           )}
         </div>
         <div className="space-y-3">
-          <ScrollArea className="h-[200px] pr-4">
+          <ScrollArea className="h-[150px] pr-4">
             <div className="space-y-3">
               {partyNames.length > 0 ? (
                 partyNames.map((party, index) => {
