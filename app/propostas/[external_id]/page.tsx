@@ -31,6 +31,7 @@ import { CopyUrlButton } from "./components/CopyUrl"
 import { ProposalRelated } from "./components/ProposalRelated"
 import { SocialShareCard } from "./components/SocialShareCard"
 import { calculateProposalProgress } from "@/lib/phase-constants"
+import { ShareButton } from "./components/ShareButton"
 
 export async function generateMetadata({ params }: { params: { external_id: string } }) {
   const proposal = await getProposalForId(params.external_id)
@@ -213,24 +214,43 @@ export default async function ProposalDetailPage({ params }: { params: { externa
 
         {/* Progress Bar */}
         <div className="bg-white dark:bg-slate-900 border-b">
-          <div className="container py-4">
-            <div className="flex flex-col gap-2">
-              <div className="flex justify-between items-center text-sm text-muted-foreground">
-                <div className="flex flex-col gap-1">
-                  <span>Progresso Legislativo</span>
-                  <span className="text-xs text-muted-foreground/80">
-                    {progressInfo.currentPhase} • {progressInfo.category}
-                  </span>
+          <div className="container py-3 md:py-4">
+            <div className="flex flex-col gap-3">
+              {/* Mobile Layout */}
+              <div className="block md:hidden">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-foreground">Progresso Legislativo</span>
+                  <div className="text-lg font-bold text-foreground">{progressInfo.percentage}%</div>
                 </div>
-                <div className="text-right">
-                  <div className="font-semibold text-foreground">{progressInfo.percentage}%</div>
-                  <div className="text-xs text-muted-foreground/80">{progressInfo.description}</div>
+                <Progress value={progressInfo.percentage} className="h-2 mb-2" />
+                <div className="text-xs text-muted-foreground text-center">
+                  {progressInfo.currentPhase}
+                </div>
+                <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                  <span>Apresentação</span>
+                  <span>Publicação</span>
                 </div>
               </div>
-              <Progress value={progressInfo.percentage} className="h-2" />
-              <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>Apresentação</span>
-                <span>Publicação</span>
+
+              {/* Desktop Layout */}
+              <div className="hidden md:block">
+                <div className="flex justify-between items-center mb-2">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-medium text-foreground">Progresso Legislativo</span>
+                    <span className="text-sm text-muted-foreground">
+                      {progressInfo.currentPhase}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-foreground">{progressInfo.percentage}%</div>
+                    <div className="text-sm text-muted-foreground">concluído</div>
+                  </div>
+                </div>
+                <Progress value={progressInfo.percentage} className="h-3" />
+                <div className="flex justify-between text-sm text-muted-foreground mt-2">
+                  <span>Apresentação</span>
+                  <span>Publicação</span>
+                </div>
               </div>
             </div>
           </div>
@@ -247,47 +267,11 @@ export default async function ProposalDetailPage({ params }: { params: { externa
                 </Link>
               </Button>
               <div className="flex items-center gap-2">
-                {/* <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="sm" className="gap-1">
-                        <BookmarkPlus className="h-4 w-4" />
-                        <span className="hidden sm:inline">Guardar</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Guardar esta proposta</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider> */}
-
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="sm" className="gap-1">
-                        <Share2 className="h-4 w-4" />
-                        <span className="hidden sm:inline">Partilhar</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Partilhar esta proposta</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-
-                {/* <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="sm" className="gap-1">
-                        <Flag className="h-4 w-4" />
-                        <span className="hidden sm:inline">Reportar</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Reportar um problema</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider> */}
+                <ShareButton 
+                  url={`https://veto.pt/propostas/${formattedProposal.id}`}
+                  title={formattedProposal.title}
+                  className="gap-1"
+                />
               </div>
             </div>
           </div>

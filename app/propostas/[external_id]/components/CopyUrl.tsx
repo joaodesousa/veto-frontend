@@ -4,16 +4,30 @@ import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { useState } from "react"
-import { Check, Copy } from "lucide-react"
+import { Check, Copy, Share2 } from "lucide-react"
 
 interface CopyUrlButtonProps {
   url: string
   className?: string
+  variant?: "copy" | "share"
+  buttonText?: string
+  successText?: string
 }
 
-export function CopyUrlButton({ url, className }: CopyUrlButtonProps) {
+export function CopyUrlButton({ 
+  url, 
+  className, 
+  variant = "copy",
+  buttonText,
+  successText
+}: CopyUrlButtonProps) {
   const { toast } = useToast()
   const [isCopied, setIsCopied] = useState(false)
+
+  // Set default text based on variant
+  const defaultButtonText = variant === "share" ? "Partilhar" : "Copiar"
+  const defaultSuccessText = variant === "share" ? "Partilhado" : "Copiado"
+  const icon = variant === "share" ? Share2 : Copy
 
   const handleCopy = async () => {
     try {
@@ -21,7 +35,7 @@ export function CopyUrlButton({ url, className }: CopyUrlButtonProps) {
       setIsCopied(true)
       
       toast({
-        title: "URL copiado",
+        title: variant === "share" ? "Link copiado" : "URL copiado",
         description: "O link foi copiado para a área de transferência",
       })
 
@@ -39,6 +53,8 @@ export function CopyUrlButton({ url, className }: CopyUrlButtonProps) {
     }
   }
 
+  const IconComponent = icon
+
   return (
     <Button 
       variant="ghost" 
@@ -49,12 +65,12 @@ export function CopyUrlButton({ url, className }: CopyUrlButtonProps) {
       {isCopied ? (
         <>
           <Check className="mr-1 h-4 w-4" />
-          Copiado
+          {successText || defaultSuccessText}
         </>
       ) : (
         <>
-          <Copy className="mr-1 h-4 w-4" />
-          Copiar
+          <IconComponent className="mr-1 h-4 w-4" />
+          <span className="hidden sm:inline">{buttonText || defaultButtonText}</span>
         </>
       )}
     </Button>
