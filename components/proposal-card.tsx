@@ -1,4 +1,5 @@
 import { ArrowRight, Calendar, FileText } from "lucide-react"
+import Link from "next/link"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -48,10 +49,10 @@ export function ProposalCard({ title, number, status, date, party, type, iniId }
       </CardContent>
       <CardFooter className="p-4 pt-0 mt-auto">
         <Button variant="ghost" size="sm" className="gap-1 ml-auto" asChild>
-          <a href={`/propostas/${iniId || number}`}>
+          <Link href={`/propostas/${iniId || number}`}>
             Ver detalhes
             <ArrowRight className="h-3 w-3" />
-          </a>
+          </Link>
         </Button>
       </CardFooter>
     </Card>

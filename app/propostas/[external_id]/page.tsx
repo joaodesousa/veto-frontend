@@ -34,6 +34,7 @@ import { ProposalRelated } from "./components/ProposalRelated"
 import { SocialShareCard } from "./components/SocialShareCard"
 import { calculateProposalProgress } from "@/lib/phase-constants"
 import { ShareButton } from "./components/ShareButton"
+import { SmartBackButton } from "./components/SmartBackButton"
 
 export async function generateMetadata({ params }: { params: { external_id: string } }) {
   const proposal = await getProposalForId(params.external_id)
@@ -359,12 +360,7 @@ export default async function ProposalDetailPage({ params }: { params: { externa
         <div className="bg-white dark:bg-slate-900 border-b sticky top-16 z-20">
           <div className="container py-2">
             <div className="flex justify-between items-center">
-              <Button variant="ghost" size="sm" className="gap-1" asChild>
-                <Link href="/propostas">
-                  <ArrowLeft className="h-4 w-4" />
-                  Voltar
-                </Link>
-              </Button>
+              <SmartBackButton />
               <div className="flex items-center gap-2">
                 <ShareButton 
                   url={`https://veto.pt/propostas/${formattedProposal.id}`}
