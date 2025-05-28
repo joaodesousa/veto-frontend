@@ -14,7 +14,8 @@ import {
   MessageSquare,
   Share2,
   Users,
-  Bell
+  Bell,
+  Info
 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -25,6 +26,7 @@ import { getProposalForId } from "@/lib/server-api"
 import { formatProposalData } from "../utils/formatters"
 import { Progress } from "@/components/ui/progress"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { ProposalTabs } from "./components/ProposalTabs"
 import { ProposalSidebar } from "./components/ProposalSidebar"
 import { CopyUrlButton } from "./components/CopyUrl"
@@ -219,41 +221,55 @@ export default async function ProposalDetailPage({ params }: { params: { externa
               {/* Mobile Layout */}
               <div className="block md:hidden">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-foreground">Progresso</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm font-medium text-foreground">Progresso</span>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-foreground">
+                          <Info className="h-3 w-3" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-lg mx-4">
+                        <DialogHeader>
+                          <DialogTitle>Como é calculado o progresso?</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            O progresso de uma proposta legislativa é calculado com base na fase atual 
+                            do processo parlamentar, seguindo estes intervalos:
+                          </p>
+                          
+                          <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 space-y-2">
+                            <div className="text-sm"><strong>0-15%</strong> - Fases iniciais</div>
+                            <div className="text-sm"><strong>15-40%</strong> - Discussão na generalidade</div>
+                            <div className="text-sm"><strong>40-70%</strong> - Especialidade</div>
+                            <div className="text-sm"><strong>70-100%</strong> - Fases finais</div>
+                          </div>
+
+                          <p className="text-xs text-muted-foreground">
+                            O cálculo baseia-se na fase mais avançada registada no sistema parlamentar oficial.
+                          </p>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                   <div className="text-lg font-bold text-foreground">{progressInfo.percentage}%</div>
                 </div>
                 <div className="relative">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="cursor-help">
-                          <Progress value={progressInfo.percentage} className="h-2 [&>div]:rounded-none rounded-none" />
-                          {/* Visual anchor bars */}
-                          <div className="absolute -top-1 left-0 w-0.5 h-4 bg-slate-400"></div>
-                          <div className="absolute -top-1 right-0 w-0.5 h-4 bg-slate-400"></div>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-xs">
-                        <p className="text-xs">
-                          O progresso é calculado com base na fase atual do processo legislativo. 
-                          Cada fase tem um peso específico: fases iniciais (0-15%), discussão na generalidade (15-40%), 
-                          especialidade (40-70%) e fases finais (70-100%).
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Progress value={progressInfo.percentage} className="h-2 [&>div]:rounded-none rounded-none" />
+                  {/* Visual anchor bars */}
+                  <div className="absolute -top-1 left-0 w-0.5 h-4 bg-slate-400"></div>
+                  <div className="absolute -top-1 right-0 w-0.5 h-4 bg-slate-400"></div>
                 </div>
                 <div className="text-xs text-muted-foreground text-center mt-2 mb-2">
                   {progressInfo.currentPhase}
                 </div>
                 <div className="flex justify-between text-xs">
                   <div className="text-center">
-                    <div className="font-medium text-foreground">Apresentação</div>
-                    <div className="text-muted-foreground">Início do processo</div>
+                    <div className="text-muted-foreground">Apresentação</div>
                   </div>
                   <div className="text-center">
-                    <div className="font-medium text-foreground">Publicação</div>
-                    <div className="text-muted-foreground">Conclusão</div>
+                    <div className="text-muted-foreground">Publicação</div>
                   </div>
                 </div>
               </div>
@@ -284,11 +300,18 @@ export default async function ProposalDetailPage({ params }: { params: { externa
                         </div>
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs">
-                        <p className="text-xs">
-                          O progresso é calculado com base na fase atual do processo legislativo. 
-                          Cada fase tem um peso específico: fases iniciais (0-15%), discussão na generalidade (15-40%), 
-                          especialidade (40-70%) e fases finais (70-100%).
-                        </p>
+                        <div className="space-y-2">
+                          <p className="text-xs font-medium">Como é calculado o progresso?</p>
+                          <p className="text-xs text-muted-foreground">
+                            O progresso é calculado com base na fase atual do processo parlamentar:
+                          </p>
+                          <div className="text-xs space-y-1">
+                            <div><strong>0-15%</strong> - Fases iniciais</div>
+                            <div><strong>15-40%</strong> - Discussão na generalidade</div>
+                            <div><strong>40-70%</strong> - Especialidade</div>
+                            <div><strong>70-100%</strong> - Fases finais</div>
+                          </div>
+                        </div>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
