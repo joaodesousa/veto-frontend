@@ -229,25 +229,36 @@ export default async function ProposalDetailPage({ params }: { params: { externa
                           <Info className="h-3 w-3" />
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="sm:max-w-lg mx-4">
+                      <DialogContent className="max-w-[calc(100vw-2rem)] w-full sm:max-w-lg mx-auto">
                         <DialogHeader>
                           <DialogTitle>Como é calculado o progresso?</DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4">
                           <p className="text-sm text-muted-foreground leading-relaxed">
-                            O progresso de uma proposta legislativa é calculado com base na fase atual 
-                            do processo parlamentar, seguindo estes intervalos:
+                            O progresso é calculado com base na fase atual do processo parlamentar:
                           </p>
                           
-                          <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 space-y-2">
-                            <div className="text-sm"><strong>0-15%</strong> - Fases iniciais</div>
-                            <div className="text-sm"><strong>15-40%</strong> - Discussão na generalidade</div>
-                            <div className="text-sm"><strong>40-70%</strong> - Especialidade</div>
-                            <div className="text-sm"><strong>70-100%</strong> - Fases finais</div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between py-2 border-b border-slate-200 dark:border-slate-700">
+                              <span className="text-sm font-medium">0-15%</span>
+                              <span className="text-sm text-muted-foreground">Fases iniciais</span>
+                            </div>
+                            <div className="flex justify-between py-2 border-b border-slate-200 dark:border-slate-700">
+                              <span className="text-sm font-medium">15-40%</span>
+                              <span className="text-sm text-muted-foreground">Discussão na generalidade</span>
+                            </div>
+                            <div className="flex justify-between py-2 border-b border-slate-200 dark:border-slate-700">
+                              <span className="text-sm font-medium">40-70%</span>
+                              <span className="text-sm text-muted-foreground">Especialidade</span>
+                            </div>
+                            <div className="flex justify-between pt-2">
+                              <span className="text-sm font-medium">70-100%</span>
+                              <span className="text-sm text-muted-foreground">Fases finais</span>
+                            </div>
                           </div>
 
-                          <p className="text-xs text-muted-foreground">
-                            O cálculo baseia-se na fase mais avançada registada no sistema parlamentar oficial.
+                          <p className="text-xs text-muted-foreground border-t border-slate-200 dark:border-slate-700 pt-3">
+                            Baseado na fase mais avançada do sistema parlamentar oficial.
                           </p>
                         </div>
                       </DialogContent>
@@ -300,17 +311,32 @@ export default async function ProposalDetailPage({ params }: { params: { externa
                         </div>
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs">
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           <p className="text-xs font-medium">Como é calculado o progresso?</p>
                           <p className="text-xs text-muted-foreground">
                             O progresso é calculado com base na fase atual do processo parlamentar:
                           </p>
-                          <div className="text-xs space-y-1">
-                            <div><strong>0-15%</strong> - Fases iniciais</div>
-                            <div><strong>15-40%</strong> - Discussão na generalidade</div>
-                            <div><strong>40-70%</strong> - Especialidade</div>
-                            <div><strong>70-100%</strong> - Fases finais</div>
+                          <div className="space-y-1">
+                            <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-700">
+                              <span className="text-xs font-medium">0-15%</span>
+                              <span className="text-xs text-muted-foreground">Fases iniciais</span>
+                            </div>
+                            <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-700">
+                              <span className="text-xs font-medium">15-40%</span>
+                              <span className="text-xs text-muted-foreground">Discussão na generalidade</span>
+                            </div>
+                            <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-700">
+                              <span className="text-xs font-medium">40-70%</span>
+                              <span className="text-xs text-muted-foreground">Especialidade</span>
+                            </div>
+                            <div className="flex justify-between pt-1">
+                              <span className="text-xs font-medium">70-100%</span>
+                              <span className="text-xs text-muted-foreground">Fases finais</span>
+                            </div>
                           </div>
+                          <p className="text-xs text-muted-foreground border-t border-slate-200 dark:border-slate-700 pt-2">
+                            Baseado na fase mais avançada do sistema parlamentar oficial.
+                          </p>
                         </div>
                       </TooltipContent>
                     </Tooltip>
