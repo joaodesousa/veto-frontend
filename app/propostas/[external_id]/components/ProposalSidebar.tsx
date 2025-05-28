@@ -156,36 +156,25 @@ export function ProposalSidebar({
   
   return (
     <div className="space-y-6">
-      {/* Current Status Card */}
+      {/* Proposal Details Card - Refactored from Estado Atual */}
       <Card className="border-blue-100 dark:border-blue-800">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Estado Atual
+            <FileText className="h-5 w-5" />
+            Detalhes da Proposta
           </CardTitle>
-          <CardDescription>
-            Informação sobre a fase atual da proposta
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {/* Current Phase Details */}
+            {/* Key Metadata */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Categoria:</span>
-                <Badge 
-                  variant="outline" 
-                  className={`${getCategoryColorClass(progressInfo.category)} border text-xs font-medium`}
-                >
-                  {progressInfo.category}
+                <span className="text-sm font-medium">Estado:</span>
+                <Badge variant="outline" className={`${statusColor} border text-xs font-medium`}>
+                  {proposal.status}
                 </Badge>
               </div>
               
-              <div className="bg-muted/50 rounded-md p-3">
-                <div className="font-medium text-foreground mb-1">{progressInfo.currentPhase}</div>
-                <div className="text-xs text-muted-foreground">{progressInfo.description}</div>
-              </div>
-
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Última Atualização:</span>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -195,29 +184,24 @@ export function ProposalSidebar({
               </div>
             </div>
 
-            {/* Status Indicator */}
-            <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-md border border-blue-200 dark:border-blue-800">
-              <div className="flex items-center gap-2">
-                {progressInfo.percentage === 100 ? (
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                ) : (
-                  <div className="h-2 w-2 bg-blue-600 rounded-full animate-pulse" />
-                )}
-                <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                  {progressInfo.percentage === 100 ? "Processo Concluído" : "Em Progresso"}
-                </span>
-              </div>
+            {/* Actions Section */}
+            <div className="space-y-2 pt-2 border-t">
+              {proposal.textLink && (
+                <Link href={proposal.textLink} target="_blank">
+                  <Button className="w-full gap-1.5" variant="default">
+                    <FileText className="h-4 w-4" />
+                    Ver Documento Original
+                  </Button>
+                </Link>
+              )}
+              
+              <Button variant="outline" className="w-full gap-1.5" disabled>
+                <Bell className="h-4 w-4" />
+                Seguir Proposta
+                <span className="text-xs text-muted-foreground ml-auto">Em breve</span>
+              </Button>
             </div>
           </div>
-            
-          {proposal.textLink && (
-            <Link href={proposal.textLink} target="_blank">
-              <Button className="w-full mt-4 gap-1.5 text-white">
-                <FileText className="h-4 w-4" />
-                Documento da Iniciativa
-              </Button>
-            </Link>
-          )}
         </CardContent>
       </Card>
 

@@ -56,7 +56,7 @@ export function ProposalTabs({ proposal }: ProposalTabsProps) {
 
   return (
     <>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="timeline">Cronologia</TabsTrigger>
           <TabsTrigger value="voting">Votação</TabsTrigger>

@@ -219,24 +219,50 @@ export default async function ProposalDetailPage({ params }: { params: { externa
               {/* Mobile Layout */}
               <div className="block md:hidden">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-foreground">Progresso Legislativo</span>
+                  <span className="text-sm font-medium text-foreground">Progresso</span>
                   <div className="text-lg font-bold text-foreground">{progressInfo.percentage}%</div>
                 </div>
-                <Progress value={progressInfo.percentage} className="h-2 mb-2" />
-                <div className="text-xs text-muted-foreground text-center">
+                <div className="relative">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="cursor-help">
+                          <Progress value={progressInfo.percentage} className="h-2 [&>div]:rounded-none rounded-none" />
+                          {/* Visual anchor bars */}
+                          <div className="absolute -top-1 left-0 w-0.5 h-4 bg-slate-400"></div>
+                          <div className="absolute -top-1 right-0 w-0.5 h-4 bg-slate-400"></div>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p className="text-xs">
+                          O progresso é calculado com base na fase atual do processo legislativo. 
+                          Cada fase tem um peso específico: fases iniciais (0-15%), discussão na generalidade (15-40%), 
+                          especialidade (40-70%) e fases finais (70-100%).
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <div className="text-xs text-muted-foreground text-center mt-2 mb-2">
                   {progressInfo.currentPhase}
                 </div>
-                <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                  <span>Apresentação</span>
-                  <span>Publicação</span>
+                <div className="flex justify-between text-xs">
+                  <div className="text-center">
+                    <div className="font-medium text-foreground">Apresentação</div>
+                    <div className="text-muted-foreground">Início do processo</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium text-foreground">Publicação</div>
+                    <div className="text-muted-foreground">Conclusão</div>
+                  </div>
                 </div>
               </div>
 
               {/* Desktop Layout */}
               <div className="hidden md:block">
-                <div className="flex justify-between items-center mb-2">
+                <div className="flex justify-between items-center mb-3">
                   <div className="flex flex-col gap-1">
-                    <span className="text-sm font-medium text-foreground">Progresso Legislativo</span>
+                    <span className="text-sm font-medium text-foreground">Fase atual</span>
                     <span className="text-sm text-muted-foreground">
                       {progressInfo.currentPhase}
                     </span>
@@ -246,10 +272,34 @@ export default async function ProposalDetailPage({ params }: { params: { externa
                     <div className="text-sm text-muted-foreground">concluído</div>
                   </div>
                 </div>
-                <Progress value={progressInfo.percentage} className="h-3" />
-                <div className="flex justify-between text-sm text-muted-foreground mt-2">
-                  <span>Apresentação</span>
-                  <span>Publicação</span>
+                <div className="relative">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="cursor-help">
+                          <Progress value={progressInfo.percentage} className="h-3 [&>div]:rounded-none rounded-none" />
+                          {/* Visual anchor bars */}
+                          <div className="absolute -top-1 left-0 w-0.5 h-5 bg-slate-400"></div>
+                          <div className="absolute -top-1 right-0 w-0.5 h-5 bg-slate-400"></div>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p className="text-xs">
+                          O progresso é calculado com base na fase atual do processo legislativo. 
+                          Cada fase tem um peso específico: fases iniciais (0-15%), discussão na generalidade (15-40%), 
+                          especialidade (40-70%) e fases finais (70-100%).
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <div className="flex justify-between mt-3">
+                  <div className="text-center">
+                    <div className="text-xs text-muted-foreground">Apresentação</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs text-muted-foreground">Publicação</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -281,7 +331,7 @@ export default async function ProposalDetailPage({ params }: { params: { externa
         <div className="container py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2">
               {/* Summary Card */}
               {/* <Card className="border-blue-100 dark:border-blue-800 shadow-sm">
                 <CardHeader className="pb-2 bg-blue-50/50 dark:bg-blue-950/50">
