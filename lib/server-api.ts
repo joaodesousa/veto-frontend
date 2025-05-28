@@ -23,11 +23,20 @@ export async function getProposalForId(externalId: string): Promise<Proposal | n
       throw new Error(`API error: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const apiResponse = await response.json();
+    
+    // Extract the actual data from the nested structure
+    const data = apiResponse.data;
     
     // Debug the IniDescTipo field
-    console.log("API Response IniDescTipo:", data.IniDescTipo);
-    console.log("API Response IniTipo:", data.IniTipo);
+    console.log("API Response IniDescTipo:", data?.IniDescTipo);
+    console.log("API Response IniTipo:", data?.IniTipo);
+    
+    // Check if data exists
+    if (!data) {
+      console.error("No data found in API response");
+      return null;
+    }
     
     // Map the API response to our Proposal type
     const proposal: Proposal = {

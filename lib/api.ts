@@ -89,14 +89,22 @@ export async function fetchTypes(): Promise<string[]> {
     
     const data = await response.json();
     
-    // Check the structure of the response
+    // Handle different response structures
+    let types: any[] = [];
+    
     if (Array.isArray(data)) {
-      // If it's directly an array, extract the descriptions
-      return data.map(type => type.description || '');
+      // If response is directly an array
+      types = data;
+    } else if (data && data.data && Array.isArray(data.data)) {
+      // If response has nested data property
+      types = data.data;
+    } else {
+      console.error("Unexpected types data structure:", data);
+      return [];
     }
     
-    console.error("Unexpected types data structure:", data);
-    return [];
+    // Extract the descriptions or names from the types
+    return types.map(type => type.description || type.name || '').filter(Boolean);
   } catch (error) {
     console.error("Error fetching types:", error);
     throw error;
@@ -118,12 +126,25 @@ export async function fetchPhases(): Promise<string[]> {
     
     const data = await response.json();
     
-    if (data && data.data && Array.isArray(data.data)) {
-      return data.data;
+    // Handle different response structures
+    let phases: any[] = [];
+    
+    if (Array.isArray(data)) {
+      // If response is directly an array
+      phases = data;
+    } else if (data && data.data && Array.isArray(data.data)) {
+      // If response has nested data property
+      phases = data.data;
+    } else {
+      console.error("Unexpected data structure for phases:", data);
+      return [];
     }
     
-    console.error("Unexpected data structure for phases:", data);
-    return [];
+    // Extract phase names/values and filter out empty ones
+    return phases.map(phase => {
+      if (typeof phase === 'string') return phase;
+      return phase.name || phase.phase || phase.description || '';
+    }).filter(Boolean);
   } catch (error) {
     console.error("Error fetching phases:", error);
     throw error;
@@ -143,7 +164,21 @@ export async function fetchAuthors(): Promise<Author[]> {
       throw new Error(`API error: ${response.statusText}`);
     }
     
-    const authors: any[] = await response.json();
+    const data = await response.json();
+    
+    // Handle different response structures
+    let authors: any[] = [];
+    
+    if (Array.isArray(data)) {
+      // If response is directly an array
+      authors = data;
+    } else if (data && data.data && Array.isArray(data.data)) {
+      // If response has nested data property
+      authors = data.data;
+    } else {
+      console.error("Unexpected authors data structure:", data);
+      return [];
+    }
     
     // Transform to match Author type
     return authors.map(author => ({
@@ -171,7 +206,20 @@ export async function fetchParties(): Promise<Author[]> {
     }
     
     const data = await response.json();
-    const parties = data.data || [];
+    
+    // Handle different response structures
+    let parties: any[] = [];
+    
+    if (Array.isArray(data)) {
+      // If response is directly an array
+      parties = data;
+    } else if (data && data.data && Array.isArray(data.data)) {
+      // If response has nested data property
+      parties = data.data;
+    } else {
+      console.error("Unexpected parties data structure:", data);
+      return [];
+    }
     
     // Transform to match Author type
     return parties.map((party: { sigla?: string; name?: string; count?: number }) => ({
@@ -201,17 +249,26 @@ export async function fetchLegislaturas(): Promise<Legislatura[]> {
     
     const data = await response.json();
     
-    if (data && data.data && Array.isArray(data.data)) {
-      return data.data.map((item: any) => ({
-        legislature: item.legislature || '',
-        startDate: item.startDate || '',
-        endDate: item.endDate || null,
-        initiativeCount: item.initiativeCount || 0
-      }));
+    // Handle different response structures
+    let legislaturas: any[] = [];
+    
+    if (Array.isArray(data)) {
+      // If response is directly an array
+      legislaturas = data;
+    } else if (data && data.data && Array.isArray(data.data)) {
+      // If response has nested data property
+      legislaturas = data.data;
+    } else {
+      console.error("Unexpected data structure for legislaturas:", data);
+      return [];
     }
     
-    console.error("Unexpected data structure for legislaturas:", data);
-    return [];
+    return legislaturas.map((item: any) => ({
+      legislature: item.legislature || '',
+      startDate: item.startDate || '',
+      endDate: item.endDate || null,
+      initiativeCount: item.initiativeCount || 0
+    }));
   } catch (error) {
     console.error("Error fetching legislaturas:", error);
     throw error;
