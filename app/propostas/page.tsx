@@ -18,8 +18,9 @@ import { FilterSkeleton } from "@/components/filter-skeleton"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 import { fetchProposals, fetchTypes, fetchPhases, fetchAuthors, fetchParties, fetchLegislaturas } from "@/lib/api"
-import { Proposal, Author, ApiResponse } from "@/lib/types"
+import { Proposal, Author, ApiResponse, Legislatura } from "@/lib/types"
 import { useUrlState } from "@/app/hooks/use-url-state"
+import { PHASE_MAPPING, getSmartPhaseBadges } from "@/lib/phase-constants"
 
 function ProposalsContent() {
   // Get URL state handling functions
@@ -64,7 +65,7 @@ function ProposalsContent() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(initialFilters.dateRange)
   
   // Filter options data
-  const [allLegislaturas, setAllLegislaturas] = useState<string[]>([])
+  const [allLegislaturas, setAllLegislaturas] = useState<Legislatura[]>([])
   const [allTypes, setAllTypes] = useState<string[]>([])
   const [allPhases, setAllPhases] = useState<string[]>([])
   const [allAuthors, setAllAuthors] = useState<Author[]>([])
@@ -142,7 +143,7 @@ function ProposalsContent() {
         
         // Safely handle legislaturas data
         if (Array.isArray(legislaturasData)) {
-          // Filter out null/undefined values
+          // Filter out null/undefined values and store the Legislatura objects
           setAllLegislaturas(legislaturasData
             .filter((legislatura) => legislatura !== null && legislatura !== undefined));
         } else {
@@ -316,6 +317,12 @@ function ProposalsContent() {
       case 'phases':
         setSelectedPhases(prev => prev.filter(phase => phase !== value))
         break
+      case 'phase-category':
+        // Remove all phases from a specific category
+        const categoryPhases = PHASE_MAPPING[value] || []
+        const availableCategoryPhases = categoryPhases.filter(phase => allPhases.includes(phase))
+        setSelectedPhases(prev => prev.filter(phase => !availableCategoryPhases.includes(phase)))
+        break
       case 'authors':
         setSelectedAuthors(prev => prev.filter(author => author !== value))
         break
@@ -324,6 +331,9 @@ function ProposalsContent() {
         break
     }
   }
+
+  // Get smart phase badges for display
+  const smartPhaseBadges = getSmartPhaseBadges(selectedPhases, allPhases)
 
   // Handle severe error state
   if (error) {
@@ -481,12 +491,15 @@ function ProposalsContent() {
                         </button>
                       </Badge>
                     ))}
-                    {selectedPhases.map(phase => (
-                      <Badge key={`phase-${phase}`} variant="secondary" className="gap-1">
-                        {phase}
+                    {smartPhaseBadges.map(badge => (
+                      <Badge key={badge.key} variant="secondary" className="gap-1">
+                        {badge.label}
                         <button 
                           className="ml-1 rounded-full hover:bg-muted"
-                          onClick={() => removeFilter('phases', phase)}
+                          onClick={() => removeFilter(
+                            badge.isCategory ? 'phase-category' : 'phases', 
+                            badge.isCategory ? badge.label : badge.label
+                          )}
                         >
                           ✕
                         </button>

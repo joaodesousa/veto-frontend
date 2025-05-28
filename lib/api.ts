@@ -1,6 +1,6 @@
 import { format } from "date-fns"
 import type { DateRange } from "react-day-picker"
-import type { ApiResponse, Author } from "./types"
+import type { ApiResponse, Author, Legislatura } from "./types"
 
 /**
  * Fetch initiatives with optional filtering
@@ -189,7 +189,7 @@ export async function fetchParties(): Promise<Author[]> {
 /**
  * Fetch legislature options
  */
-export async function fetchLegislaturas(): Promise<string[]> {
+export async function fetchLegislaturas(): Promise<Legislatura[]> {
   try {
     const response: Response = await fetch('https://legis.veto.pt/api/legislaturas', {
       next: { revalidate: 3600 } // Cache for 1 hour
@@ -202,7 +202,12 @@ export async function fetchLegislaturas(): Promise<string[]> {
     const data = await response.json();
     
     if (data && data.data && Array.isArray(data.data)) {
-      return data.data;
+      return data.data.map((item: any) => ({
+        legislature: item.legislature || '',
+        startDate: item.startDate || '',
+        endDate: item.endDate || null,
+        initiativeCount: item.initiativeCount || 0
+      }));
     }
     
     console.error("Unexpected data structure for legislaturas:", data);

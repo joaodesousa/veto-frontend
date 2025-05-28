@@ -1,12 +1,13 @@
 "use client"
 
-import { Users, Bell, FileText, UserCheck, ChevronDown } from "lucide-react"
+import { Users, Bell, FileText, UserCheck, ChevronDown, TrendingUp, Clock, CheckCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { getStatusColor } from "../../../utils/colors"
+import { calculateProposalProgress, CATEGORY_COLORS } from "@/lib/phase-constants"
 import Link from "next/link"
 import { useState } from "react"
 
@@ -21,12 +22,18 @@ interface TimelineItem {
   date: string;
 }
 
+interface Phase {
+  name: string;
+  date: string;
+}
+
 interface Proposal {
   status: string;
   timeline: TimelineItem[];
   deputies: Deputy[];
   lastUpdate: string;
   textLink: string | null;
+  phases: Phase[];
 }
 
 // Define the props type for the ProposalSidebar component
@@ -49,6 +56,14 @@ export function ProposalSidebar({
   const statusColor = getStatusColor(proposal.status);
   const [isAuthorsOpen, setIsAuthorsOpen] = useState(false);
   
+  // Calculate accurate progress information
+  const progressInfo = calculateProposalProgress(proposal.phases || []);
+  
+  // Get category color class
+  const getCategoryColorClass = (category: string) => {
+    return CATEGORY_COLORS[category] || "bg-gray-50 border-gray-200 text-gray-800";
+  };
+
   // Extract all authors from different sources
   const getAllAuthors = () => {
     const allAuthors: {
@@ -139,59 +154,59 @@ export function ProposalSidebar({
     return acc;
   }, {} as Record<string, typeof allAuthors>);
   
-  // Get the next step (for display purposes)
-  const progressSteps = [
-    "Apresentação",
-    "Admissão",
-    "Discussão na Comissão",
-    "Audições Públicas",
-    "Em Análise",
-    "Votação na Especialidade",
-    "Votação Final Global",
-    "Promulgação",
-    "Publicação",
-  ];
-  
-  let currentStepIndex = 0;
-  if (proposal.timeline && proposal.timeline.length > 0) {
-    const lastPhaseTitle = proposal.timeline[proposal.timeline.length - 1].title;
-    const matchingIndex = progressSteps.findIndex(step => 
-      lastPhaseTitle.includes(step) || step.includes(lastPhaseTitle)
-    );
-    if (matchingIndex !== -1) {
-      currentStepIndex = matchingIndex;
-    }
-  }
-  
-  const nextStep = currentStepIndex < progressSteps.length - 1 
-    ? progressSteps[currentStepIndex + 1] 
-    : "Concluído";
-  
   return (
     <div className="space-y-6">
       {/* Current Status Card */}
       <Card className="border-blue-100 dark:border-blue-800">
         <CardHeader>
-          <CardTitle>Estado Atual</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            Estado Atual
+          </CardTitle>
+          <CardDescription>
+            Informação sobre a fase atual da proposta
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Fase Atual:</span>
-              <span className="text-sm">
-                {proposal.timeline && proposal.timeline.length > 0
-                  ? proposal.timeline[proposal.timeline.length - 1].title
-                  : "N/A"}
-              </span>
+            {/* Current Phase Details */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Categoria:</span>
+                <Badge 
+                  variant="outline" 
+                  className={`${getCategoryColorClass(progressInfo.category)} border text-xs font-medium`}
+                >
+                  {progressInfo.category}
+                </Badge>
+              </div>
+              
+              <div className="bg-muted/50 rounded-md p-3">
+                <div className="font-medium text-foreground mb-1">{progressInfo.currentPhase}</div>
+                <div className="text-xs text-muted-foreground">{progressInfo.description}</div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Última Atualização:</span>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  {proposal.lastUpdate}
+                </div>
+              </div>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Última Atualização:</span>
-              <span className="text-sm">{proposal.lastUpdate}</span>
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Próxima Etapa:</span>
-              <span className="text-sm">{nextStep}</span>
+
+            {/* Status Indicator */}
+            <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-md border border-blue-200 dark:border-blue-800">
+              <div className="flex items-center gap-2">
+                {progressInfo.percentage === 100 ? (
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                ) : (
+                  <div className="h-2 w-2 bg-blue-600 rounded-full animate-pulse" />
+                )}
+                <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                  {progressInfo.percentage === 100 ? "Processo Concluído" : "Em Progresso"}
+                </span>
+              </div>
             </div>
           </div>
             

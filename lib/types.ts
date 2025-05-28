@@ -2,9 +2,9 @@
 
 export interface Author {
   id: string;
-  name?: string;
+  name: string;
   party?: string | null;
-  author_type?: string;
+  author_type: string;
 }
 
 export interface Commission {
@@ -28,6 +28,8 @@ export interface TimelineSubitem {
   date: string;
   title: string;
   description: string;
+  voteId?: string; // Add vote ID for linking to voting tab
+  hasVote?: boolean; // Flag to indicate if this item has associated votes
 }
 
 export interface TimelineItem {
@@ -35,6 +37,8 @@ export interface TimelineItem {
   title: string;
   description: string;
   subitems?: TimelineSubitem[];
+  voteId?: string; // Add vote ID for linking to voting tab
+  hasVote?: boolean; // Flag to indicate if this item has associated votes
 }
 
 export interface VoteParties {
@@ -76,6 +80,7 @@ export interface VoteRecord {
   result: string;
   date: string;
   description?: string;
+  phaseName?: string;
 }
 
 export interface Attachment {
@@ -144,7 +149,18 @@ export interface FormattedProposal {
   description: string;
   authors: string[];
   deputies: { name: string; party?: string }[];
-  timeline: TimelineItem[];
+  timeline: Array<{
+    date: string;
+    title: string;
+    description: string;
+    subitems?: Array<{
+      date: string;
+      title: string;
+      description: string;
+    }>;
+    voteId?: string;
+    hasVote?: boolean;
+  }>;
   votes: {
     favor: number;
     against: number;
@@ -265,4 +281,11 @@ export interface FilterState {
     from: Date;
     to?: Date;
   };
+}
+
+export interface Legislatura {
+  legislature: string;
+  startDate: string;
+  endDate: string | null;
+  initiativeCount: number;
 }

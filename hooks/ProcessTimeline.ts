@@ -13,6 +13,8 @@ interface TimelineItem {
   title: string;
   description: string;
   subitems?: TimelineSubitem[];
+  voteId?: string;
+  hasVote: boolean;
 }
 
 export function useProcessTimeline(phases: Phase[] | undefined): TimelineItem[] {
@@ -39,12 +41,22 @@ export function useProcessTimeline(phases: Phase[] | undefined): TimelineItem[] 
       const mainPhase = groupedPhases[0];
       const formattedDate = new Date(mainPhase.date).toLocaleDateString('pt-PT');
       
+      // Check if this phase has votes
+      const phaseHasVotes = groupedPhases.some(phase => 
+        phase.votes && Array.isArray(phase.votes) && phase.votes.length > 0
+      );
+      
+      // Create a unique vote ID for this phase if it has votes - use formatted date to match voting component
+      const voteId = phaseHasVotes ? `phase-${mainPhase.name}-${formattedDate}` : undefined;
+      
       // Create the base timeline item
       const timelineItem: TimelineItem = {
         date: formattedDate,
         title: mainPhase.name,
         description: mainPhase.observation || '',
-        subitems: []
+        subitems: [],
+        voteId: voteId,
+        hasVote: phaseHasVotes
       };
       
       // Collect all commissions across all phases in this group
@@ -53,6 +65,7 @@ export function useProcessTimeline(phases: Phase[] | undefined): TimelineItem[] 
         observation?: string;
         votes?: boolean;
         documents?: boolean;
+        voteId?: string;
       }> = new Map();
       
       // Extract commissions from all phases
@@ -61,13 +74,19 @@ export function useProcessTimeline(phases: Phase[] | undefined): TimelineItem[] 
           phase.commissions.forEach(comm => {
             if (comm.name) {
               const existingComm = commissions.get(comm.name);
+              const commHasVotes = comm.votes && comm.votes.length > 0;
+              const commVoteId = commHasVotes ? `commission-${comm.name}-${formattedDate}` : undefined;
               
               if (existingComm) {
                 // Update existing commission with additional info
-                existingComm.votes = existingComm.votes || 
-                  (comm.votes && comm.votes.length > 0);
+                existingComm.votes = existingComm.votes || commHasVotes;
                 existingComm.documents = existingComm.documents || 
                   (comm.documents && comm.documents.length > 0);
+                
+                // Use the vote ID if this commission has votes
+                if (commHasVotes && !existingComm.voteId) {
+                  existingComm.voteId = commVoteId;
+                }
                 
                 // Merge observations if both have them
                 if (comm.observation && existingComm.observation) {
@@ -80,8 +99,9 @@ export function useProcessTimeline(phases: Phase[] | undefined): TimelineItem[] 
                 commissions.set(comm.name, {
                   name: comm.name,
                   observation: comm.observation,
-                  votes: comm.votes && comm.votes.length > 0,
-                  documents: comm.documents && comm.documents.length > 0
+                  votes: commHasVotes,
+                  documents: comm.documents && comm.documents.length > 0,
+                  voteId: commVoteId
                 });
               }
             }
@@ -109,7 +129,9 @@ export function useProcessTimeline(phases: Phase[] | undefined): TimelineItem[] 
           return {
             date: formattedDate,
             title: comm.name,
-            description
+            description,
+            voteId: comm.voteId,
+            hasVote: comm.votes || false
           };
         });
       }

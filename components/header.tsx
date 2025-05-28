@@ -58,7 +58,7 @@ export function Header() {
             </span>
           </Link>
         </div>
-         {/* <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-6">
           <Link
             href="/propostas"
             className={cn(
@@ -68,34 +68,7 @@ export function Header() {
           >
             Propostas
           </Link>
-         <Link
-            href="/deputados"
-            className={cn(
-              "text-sm font-medium transition-colors hover:text-primary",
-              isHomePage && !scrolled ? "text-white/90 hover:text-white" : "",
-            )}
-          >
-            Deputados
-          </Link>
-          <Link
-            href="/estatisticas"
-            className={cn(
-              "text-sm font-medium transition-colors hover:text-primary",
-              isHomePage && !scrolled ? "text-white/90 hover:text-white" : "",
-            )}
-          >
-            Estatísticas
-          </Link> 
-          <Link
-            href="/sobre"
-            className={cn(
-              "text-sm font-medium transition-colors hover:text-primary",
-              isHomePage && !scrolled ? "text-white/90 hover:text-white" : "",
-            )}
-          >
-            Sobre
-          </Link>
-        </nav>*/}
+        </nav>
         <div className="flex items-center gap-2">
           <ThemeToggle isTransparent={isHomePage && !scrolled} />
           <Button

@@ -1,4 +1,6 @@
 // app/propostas/[external_id]/components/ProposalTabs.tsx
+"use client";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProposalAbout } from "./ProposalAbout"
 import { ProposalTimeline } from "./ProposalTimeline"
@@ -23,7 +25,7 @@ interface VotesData {
   }>;
   result: string;
   date: string;
-  hasVotes?: boolean;
+  hasVotes: boolean;
 }
 
 interface DocumentItem {
@@ -44,9 +46,17 @@ interface ProposalTabsProps {
 }
 
 export function ProposalTabs({ proposal }: ProposalTabsProps) {
+  const [activeTab, setActiveTab] = useState("timeline");
+  const [scrollToVoteId, setScrollToVoteId] = useState<string | undefined>();
+
+  const handleVoteClick = (voteId: string) => {
+    setScrollToVoteId(voteId);
+    setActiveTab("voting");
+  };
+
   return (
     <>
-      <Tabs defaultValue="timeline" className="mt-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="timeline">Cronologia</TabsTrigger>
           <TabsTrigger value="voting">Votação</TabsTrigger>
@@ -57,11 +67,15 @@ export function ProposalTabs({ proposal }: ProposalTabsProps) {
           <ProposalTimeline 
             timeline={proposal.timeline} 
             phases={proposal.phases}
+            onVoteClick={handleVoteClick}
           />
         </TabsContent>
         
         <TabsContent value="voting" className="mt-4">
-          <ProposalVoting votes={proposal.votes} />
+          <ProposalVoting 
+            votes={proposal.votes} 
+            scrollToVoteId={scrollToVoteId}
+          />
         </TabsContent>
         
         <TabsContent value="documents" className="mt-4">

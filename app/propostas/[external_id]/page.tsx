@@ -30,6 +30,7 @@ import { ProposalSidebar } from "./components/ProposalSidebar"
 import { CopyUrlButton } from "./components/CopyUrl"
 import { ProposalRelated } from "./components/ProposalRelated"
 import { SocialShareCard } from "./components/SocialShareCard"
+import { calculateProposalProgress } from "@/lib/phase-constants"
 
 export async function generateMetadata({ params }: { params: { external_id: string } }) {
   const proposal = await getProposalForId(params.external_id)
@@ -77,32 +78,8 @@ export default async function ProposalDetailPage({ params }: { params: { externa
       return formattedProposal.date;
     })();
 
-    // Calculate progress percentage based on timeline
-    const progressSteps = [
-      "Apresentação",
-      "Admissão",
-      "Discussão na Comissão",
-      "Audições Públicas",
-      "Em Análise",
-      "Votação na Especialidade",
-      "Votação Final Global",
-      "Promulgação",
-      "Publicação",
-    ]
-
-    // Find the current step by matching the last timeline item to progressSteps
-    let currentStepIndex = 0
-    if (formattedProposal.timeline && formattedProposal.timeline.length > 0) {
-      const lastPhaseTitle = formattedProposal.timeline[formattedProposal.timeline.length - 1].title
-      const matchingIndex = progressSteps.findIndex(step => 
-        lastPhaseTitle.includes(step) || step.includes(lastPhaseTitle)
-      )
-      if (matchingIndex !== -1) {
-        currentStepIndex = matchingIndex
-      }
-    }
-    
-    const progressPercentage = Math.round(((currentStepIndex + 1) / progressSteps.length) * 100)
+    // Calculate accurate progress based on actual phases
+    const progressInfo = calculateProposalProgress(formattedProposal.phases)
 
     // Stats for the proposal
     const stats = {
@@ -238,11 +215,19 @@ export default async function ProposalDetailPage({ params }: { params: { externa
         <div className="bg-white dark:bg-slate-900 border-b">
           <div className="container py-4">
             <div className="flex flex-col gap-2">
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Progresso Legislativo</span>
-                <span>{progressPercentage}%</span>
+              <div className="flex justify-between items-center text-sm text-muted-foreground">
+                <div className="flex flex-col gap-1">
+                  <span>Progresso Legislativo</span>
+                  <span className="text-xs text-muted-foreground/80">
+                    {progressInfo.currentPhase} • {progressInfo.category}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <div className="font-semibold text-foreground">{progressInfo.percentage}%</div>
+                  <div className="text-xs text-muted-foreground/80">{progressInfo.description}</div>
+                </div>
               </div>
-              <Progress value={progressPercentage} className="h-2" />
+              <Progress value={progressInfo.percentage} className="h-2" />
               <div className="flex justify-between text-xs text-muted-foreground mt-1">
                 <span>Apresentação</span>
                 <span>Publicação</span>

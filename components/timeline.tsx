@@ -1,6 +1,8 @@
 // components/timeline.tsx
 import type React from "react"
 import { cn } from "@/lib/utils"
+import { Vote } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 interface TimelineProps {
   children: React.ReactNode
@@ -11,7 +13,7 @@ export function Timeline({ children, className }: TimelineProps) {
   return <div className={cn("space-y-4", className)}>{children}</div>
 }
 
-// Update the TimelineItem interface to include subitems
+// Update the TimelineItem interface to include subitems and vote linking
 interface TimelineItemProps {
   date: string
   title: string
@@ -23,9 +25,22 @@ interface TimelineItemProps {
     title: string
     description: string
   }>
+  voteId?: string
+  hasVote?: boolean
+  onVoteClick?: (voteId: string) => void
 }
 
-export function TimelineItem({ date, title, description, isLast = false, className, subitems }: TimelineItemProps) {
+export function TimelineItem({ 
+  date, 
+  title, 
+  description, 
+  isLast = false, 
+  className, 
+  subitems,
+  voteId,
+  hasVote,
+  onVoteClick
+}: TimelineItemProps) {
   return (
     <div className={cn("flex gap-4", className)}>
       <div className="flex flex-col items-center">
@@ -37,7 +52,20 @@ export function TimelineItem({ date, title, description, isLast = false, classNa
       </div>
       <div className={cn("pb-8 pt-1", isLast && !subitems?.length && "pb-0")}>
         <div className="text-sm text-muted-foreground">{date}</div>
-        <div className="font-medium mt-0.5">{title}</div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 mt-0.5">
+          <div className="font-medium">{title}</div>
+          {hasVote && voteId && onVoteClick && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 self-start mt-1 sm:mt-0"
+              onClick={() => voteId && onVoteClick(voteId)}
+            >
+              <Vote className="h-3 w-3 mr-1" />
+              Ver Votação
+            </Button>
+          )}
+        </div>
         {description && <div className="text-sm text-muted-foreground mt-1">{description}</div>}
         {/* Render subitems if they exist */}
         {subitems && subitems.length > 0 && (

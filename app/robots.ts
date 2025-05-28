@@ -5,7 +5,12 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: '/private/',
+      disallow: [
+        '/parlamento',
+        '/deputados', 
+        '/estatisticas',
+        '/sobre'
+      ],
     },
     sitemap: 'https://veto.pt/sitemap.xml',
   }

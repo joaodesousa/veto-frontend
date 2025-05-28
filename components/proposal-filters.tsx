@@ -15,10 +15,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Separator } from "@/components/ui/separator"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Author } from "@/lib/types"
+import { Author, Legislatura } from "@/lib/types"
+import { Drawer, DrawerContent, DrawerTrigger, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { EnhancedPhaseFilter } from "@/components/enhanced-phase-filter"
 
 interface ProposalFiltersProps {
-  allLegislaturas: string[] | any[];
+  allLegislaturas: Legislatura[];
   allTypes: string[] | any[];
   allPhases: string[] | any[];
   allAuthors: Author[];
@@ -53,6 +56,8 @@ export function ProposalFilters({
   initialDateRange,
   onFiltersChange 
 }: ProposalFiltersProps) {
+  const isMobile = useIsMobile()
+  
   // Filter states
   const [selectedLegislaturas, setSelectedLegislaturas] = React.useState<string[]>(() => {
     // If initialLegislaturas is provided, use it
@@ -60,12 +65,12 @@ export function ProposalFilters({
       return initialLegislaturas;
     }
     // Set "XVI" as default if it exists in allLegislaturas
-    if (Array.isArray(allLegislaturas) && allLegislaturas.includes("XVI")) {
+    if (Array.isArray(allLegislaturas) && allLegislaturas.some(leg => leg.legislature === "XVI")) {
       return ["XVI"];
     }
     // If "XVI" doesn't exist but there's one value, select that
     else if (Array.isArray(allLegislaturas) && allLegislaturas.length === 1) {
-      return [String(allLegislaturas[0])];
+      return [allLegislaturas[0].legislature];
     }
     return [];
   });
@@ -74,14 +79,18 @@ export function ProposalFilters({
   const [selectedAuthors, setSelectedAuthors] = React.useState<string[]>(initialAuthors);
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>(initialDateRange);
   
-  // Search state for phases - now just a single selected phase
-  const [selectedPhase, setSelectedPhase] = React.useState<string>(() => {
-    return initialPhases && initialPhases.length > 0 ? initialPhases[0] : "";
-  });
-  const [phaseDropdownOpen, setPhaseDropdownOpen] = React.useState(false);
+  // Updated to support multiple phase selection
+  const [selectedPhases, setSelectedPhases] = React.useState<string[]>(initialPhases);
+  
+  // Date picker state for mobile/desktop
+  const [datePopoverOpen, setDatePopoverOpen] = React.useState(false);
+  const [dateDrawerOpen, setDateDrawerOpen] = React.useState(false);
   
   // Flag to avoid the initial onFiltersChange call
   const isInitialMount = useRef(true);
+  
+  // Flag to track when we're clearing date locally
+  const isClearingDate = useRef(false);
   
   // Store the latest callback to avoid infinite loops when it changes
   const onFiltersChangeRef = useRef(onFiltersChange);
@@ -102,7 +111,7 @@ export function ProposalFilters({
 
   React.useEffect(() => {
     if (initialPhases) {
-      setSelectedPhase(initialPhases.length > 0 ? initialPhases[0] : "");
+      setSelectedPhases(initialPhases);
     }
   }, [initialPhases]);
 
@@ -119,63 +128,31 @@ export function ProposalFilters({
   }, [initialParties]);
 
   React.useEffect(() => {
+    // Don't sync if we're currently clearing the date locally
+    if (isClearingDate.current) {
+      isClearingDate.current = false;
+      return;
+    }
+    
+    // Only sync if initialDateRange is provided and different from current state
     if (initialDateRange !== undefined) {
       setDateRange(initialDateRange);
+    } else if (initialDateRange === undefined && dateRange !== undefined) {
+      // If prop becomes undefined, clear the local state
+      setDateRange(undefined);
     }
   }, [initialDateRange]);
   
   // Helper function to extract display name from Legislatura 
-  const extractLegislaturaName = (legislatura: any): string => {
-    if (typeof legislatura === 'string') {
-      return legislatura;
-    }
-    
-    if (legislatura && typeof legislatura === 'object') {
-      // Try name first as most likely property
-      if (legislatura.name && typeof legislatura.name === 'string') {
-        return legislatura.name;
-      }
-      
-      // Try other possible properties
-      for (const key of ['legislatura', 'title', 'label', 'description', 'value']) {
-        if (legislatura[key] && typeof legislatura[key] === 'string') {
-          return legislatura[key];
-        }
-      }
-      
-      // Fallback to a default string
-      return `Legislatura ${legislatura.id || ''}`;
-    }
-    
-    // Fallback for null/undefined
-    return String(legislatura || '');
+  const extractLegislaturaName = (legislatura: Legislatura): string => {
+    const startYear = new Date(legislatura.startDate).getFullYear();
+    const endYear = legislatura.endDate ? new Date(legislatura.endDate).getFullYear() : 'presente';
+    return `${legislatura.legislature} (${startYear}-${endYear})`;
   };
-  
-  // Helper function to extract display name from phase objects
-  const extractPhaseName = (phase: any): string => {
-    if (typeof phase === 'string') {
-      return phase;
-    }
-    
-    if (phase && typeof phase === 'object') {
-      // Try name first as most likely property
-      if (phase.name && typeof phase.name === 'string') {
-        return phase.name;
-      }
-      
-      // Try other possible properties
-      for (const key of ['phase', 'title', 'label', 'description', 'value']) {
-        if (phase[key] && typeof phase[key] === 'string') {
-          return phase[key];
-        }
-      }
-      
-      // Fallback to a default string
-      return `Fase ${phase.id || ''}`;
-    }
-    
-    // Fallback for null/undefined
-    return String(phase || '');
+
+  // Helper function to get the legislature value for filtering
+  const getLegislaturaValue = (legislatura: Legislatura): string => {
+    return legislatura.legislature;
   };
   
   // Helper function to extract display name from type objects
@@ -211,6 +188,24 @@ export function ProposalFilters({
     return [...new Set(names)];
   }, [allParties]);
 
+  // Convert allPhases to string array for the enhanced filter
+  const phaseStrings = React.useMemo(() => {
+    if (!Array.isArray(allPhases)) return [];
+    return allPhases.map(phase => {
+      if (typeof phase === 'string') return phase;
+      if (phase && typeof phase === 'object') {
+        // Try common properties for phase name
+        for (const key of ['name', 'phase', 'title', 'label', 'description', 'value']) {
+          if (phase[key] && typeof phase[key] === 'string') {
+            return phase[key];
+          }
+        }
+        return `Fase ${phase.id || ''}`;
+      }
+      return String(phase || '');
+    }).filter(Boolean);
+  }, [allPhases]);
+
   // Apply filters when they change
   React.useEffect(() => {
     // Skip the first render to avoid potential initial infinite loops
@@ -219,19 +214,16 @@ export function ProposalFilters({
       return;
     }
     
-    // Convert single phase to array for compatibility with existing API
-    const phasesArray = selectedPhase ? [selectedPhase] : [];
-    
     // Use the ref to call the latest callback without including it in dependencies
     onFiltersChangeRef.current(
       selectedLegislaturas,
       selectedTopics,
-      phasesArray, // Use the converted array
+      selectedPhases, // Now using the array directly
       selectedAuthors,
       selectedParties,
       dateRange
     );
-  }, [selectedLegislaturas, selectedTopics, selectedPhase, selectedAuthors, selectedParties, dateRange]);
+  }, [selectedLegislaturas, selectedTopics, selectedPhases, selectedAuthors, selectedParties, dateRange]);
 
   // Handle legislatura change
   const handleLegislaturaChange = (legislatura: string, checked: boolean) => {
@@ -269,11 +261,15 @@ export function ProposalFilters({
 
   // Clear filters functionality
   const clearLegislaturas = () => setSelectedLegislaturas([]);
-  const clearPhases = () => setSelectedPhase("");
+  const clearPhases = () => setSelectedPhases([]);
   const clearParties = () => setSelectedParties([]);
   const clearTopics = () => setSelectedTopics([]);
   const clearAuthors = () => setSelectedAuthors([]);
-  const clearDate = () => setDateRange(undefined);
+  const clearDate = () => {
+    isClearingDate.current = true;
+    setDateRange(undefined);
+    setDateDrawerOpen(false);
+  };
 
   // Clear all filters
   const clearAllFilters = () => {
@@ -287,7 +283,7 @@ export function ProposalFilters({
 
   // Check if any filters are applied
   const hasFilters = selectedLegislaturas.length > 0 ||
-                    !!selectedPhase || 
+                    selectedPhases.length > 0 || 
                     selectedParties.length > 0 || 
                     selectedTopics.length > 0 || 
                     selectedAuthors.length > 0 || 
@@ -313,28 +309,27 @@ export function ProposalFilters({
         <ScrollArea className="h-[80px] pr-4">
           <div className="space-y-3">
             {Array.isArray(allLegislaturas) && allLegislaturas.map((legislatura, index) => {
-              // Extract the display name
-              const legislaturaStr = extractLegislaturaName(legislatura);
+              // Extract the display name and value
+              const legislaturaDisplayName = extractLegislaturaName(legislatura);
+              const legislaturaValue = getLegislaturaValue(legislatura);
               
-              // Create a unique key 
-              const legislaturaKey = typeof legislatura === 'object' && legislatura.id ? 
-                String(legislatura.id) : 
-                (typeof legislatura === 'string' ? legislatura : `legislatura-${index}`);
+              // Create a unique key using the legislature value
+              const legislaturaKey = legislatura.legislature || `legislatura-${index}`;
               
               return (
                 <div key={`legislatura-${legislaturaKey}`} className="flex items-center space-x-2">
                   <Checkbox 
                     id={`legislatura-${index}`} 
-                    checked={selectedLegislaturas.includes(legislaturaStr)}
+                    checked={selectedLegislaturas.includes(legislaturaValue)}
                     onCheckedChange={(checked) => {
-                      handleLegislaturaChange(legislaturaStr, !!checked);
+                      handleLegislaturaChange(legislaturaValue, !!checked);
                     }}
                   />
                   <label
                     htmlFor={`legislatura-${index}`}
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
-                    {legislaturaStr}
+                    {legislaturaDisplayName}
                   </label>
                 </div>
               );
@@ -345,7 +340,7 @@ export function ProposalFilters({
 
       <Separator />
 
-      {/* Topics/Types Filter (Now at the top) */}
+      {/* Topics/Types Filter */}
       <div>
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-sm font-medium">Tipo</h3>
@@ -395,11 +390,11 @@ export function ProposalFilters({
 
       <Separator />
 
-      {/* Status/Phases Filter - Searchable Dropdown */}
+      {/* Enhanced Phase Filter */}
       <div>
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-sm font-medium">Estado</h3>
-          {selectedPhase && (
+          {selectedPhases.length > 0 && (
             <Button 
               variant="ghost" 
               size="sm" 
@@ -411,68 +406,12 @@ export function ProposalFilters({
           )}
         </div>
         
-        <Popover open={phaseDropdownOpen} onOpenChange={setPhaseDropdownOpen}>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={phaseDropdownOpen}
-                    className="w-full justify-between"
-                  >
-                    <span className="truncate text-left">
-                      {selectedPhase || "Selecionar estado..."}
-                    </span>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-              </TooltipTrigger>
-              {selectedPhase && (
-                <TooltipContent>
-                  <p>{selectedPhase}</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
-          <PopoverContent className="w-[300px] p-0">
-            <Command>
-              <CommandInput placeholder="Pesquisar estados..." />
-              <CommandList>
-                <CommandEmpty>Nenhum estado encontrado.</CommandEmpty>
-                <CommandGroup>
-                  {Array.isArray(allPhases) && allPhases.map((phase, index) => {
-                    const phaseStr = extractPhaseName(phase);
-                    const phaseKey = typeof phase === 'object' && phase.id ? 
-                      String(phase.id) : 
-                      (typeof phase === 'string' ? phase : `phase-${index}`);
-                    
-                    return (
-                      <CommandItem
-                        key={`phase-${phaseKey}`}
-                        value={phaseStr}
-                        onSelect={(currentValue) => {
-                          setSelectedPhase(currentValue === selectedPhase ? "" : currentValue);
-                          setPhaseDropdownOpen(false);
-                        }}
-                        className="flex items-start"
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4 mt-0.5 shrink-0",
-                            selectedPhase === phaseStr ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        <span className="break-words">{phaseStr}</span>
-                      </CommandItem>
-                    );
-                  })}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+        <EnhancedPhaseFilter
+          allPhases={phaseStrings}
+          selectedPhases={selectedPhases}
+          onPhasesChange={setSelectedPhases}
+          onClear={clearPhases}
+        />
       </div>
 
       <Separator />
@@ -480,7 +419,7 @@ export function ProposalFilters({
       {/* Parties Filter */}
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-sm font-medium">Partido</h3>
+          <h3 className="text-sm font-medium">Autor</h3>
           {selectedParties.length > 0 && (
             <Button 
               variant="ghost" 
@@ -546,51 +485,138 @@ export function ProposalFilters({
           )}
         </div>
         <div className="grid gap-2">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                id="date"
-                variant={"outline"}
-                className={cn("w-full justify-start text-left font-normal", !dateRange && "text-muted-foreground")}
-              >
-                <Calendar className="mr-2 h-4 w-4" />
-                {dateRange?.from ? (
-                  dateRange.to ? (
-                    <>
-                      {dateRange.from.toLocaleDateString('pt-PT')} - {dateRange.to.toLocaleDateString('pt-PT')}
-                    </>
+          {isMobile ? (
+            // Mobile: Use Drawer for better touch experience
+            <Drawer open={dateDrawerOpen} onOpenChange={setDateDrawerOpen}>
+              <DrawerTrigger asChild>
+                <Button
+                  id="date"
+                  variant={"outline"}
+                  className={cn("w-full justify-start text-left font-normal", !dateRange && "text-muted-foreground")}
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {dateRange?.from ? (
+                    dateRange.to ? (
+                      <>
+                        {dateRange.from.toLocaleDateString('pt-PT')} - {dateRange.to.toLocaleDateString('pt-PT')}
+                      </>
+                    ) : (
+                      dateRange.from.toLocaleDateString('pt-PT')
+                    )
                   ) : (
-                    dateRange.from.toLocaleDateString()
-                  )
-                ) : (
-                  <span>Selecionar período</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <div className="p-3 border-b flex justify-between items-center">
-                <h4 className="font-medium text-sm">Selecionar período</h4>
-                {dateRange?.from && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearDate}
-                    className="h-8 px-2 text-xs"
-                  >
-                    Limpar
-                  </Button>
-                )}
-              </div>
-              <CalendarComponent
-                initialFocus
-                mode="range"
-                defaultMonth={dateRange?.from}
-                selected={dateRange}
-                onSelect={setDateRange}
-                numberOfMonths={2}
-              />
-            </PopoverContent>
-          </Popover>
+                    <span>Selecionar período</span>
+                  )}
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent className="max-h-[90vh]">
+                <DrawerHeader className="pb-4">
+                  <div className="flex justify-between items-center">
+                    <DrawerTitle>Selecionar Período</DrawerTitle>
+                    {dateRange?.from && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          clearDate();
+                          setDateDrawerOpen(false);
+                        }}
+                        className="h-8 px-2 text-xs"
+                      >
+                        Limpar
+                      </Button>
+                    )}
+                  </div>
+                </DrawerHeader>
+                <div className="px-4 pb-4">
+                  <CalendarComponent
+                    initialFocus
+                    mode="range"
+                    defaultMonth={dateRange?.from}
+                    selected={dateRange}
+                    onSelect={(range) => {
+                      setDateRange(range);
+                      // Close drawer when both dates are selected
+                      if (range?.from && range?.to) {
+                        setDateDrawerOpen(false);
+                      }
+                    }}
+                    numberOfMonths={1}
+                    className="rounded-md border-0 w-full"
+                    classNames={{
+                      months: "flex flex-col space-y-4",
+                      month: "space-y-4 w-full",
+                      caption: "flex justify-center pt-1 relative items-center mb-4",
+                      caption_label: "text-base font-medium",
+                      nav: "space-x-1 flex items-center",
+                      nav_button: "h-10 w-10 bg-transparent p-0 opacity-70 hover:opacity-100 border border-input rounded-md flex items-center justify-center",
+                      nav_button_previous: "absolute left-1",
+                      nav_button_next: "absolute right-1",
+                      table: "w-full border-collapse space-y-1",
+                      head_row: "flex w-full",
+                      head_cell: "text-muted-foreground rounded-md flex-1 font-normal text-sm text-center py-2",
+                      row: "flex w-full mt-2",
+                      cell: "flex-1 text-center text-sm p-1 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                      day: "h-12 w-full p-0 font-normal aria-selected:opacity-100 rounded-md hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+                      day_range_end: "day-range-end",
+                      day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                      day_today: "bg-accent text-accent-foreground font-semibold",
+                      day_outside: "day-outside text-muted-foreground aria-selected:bg-accent/50 aria-selected:text-muted-foreground opacity-50",
+                      day_disabled: "text-muted-foreground opacity-30",
+                      day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+                      day_hidden: "invisible",
+                    }}
+                  />
+                </div>
+              </DrawerContent>
+            </Drawer>
+          ) : (
+            // Desktop: Use Popover
+            <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  id="date"
+                  variant={"outline"}
+                  className={cn("w-full justify-start text-left font-normal", !dateRange && "text-muted-foreground")}
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {dateRange?.from ? (
+                    dateRange.to ? (
+                      <>
+                        {dateRange.from.toLocaleDateString('pt-PT')} - {dateRange.to.toLocaleDateString('pt-PT')}
+                      </>
+                    ) : (
+                      dateRange.from.toLocaleDateString('pt-PT')
+                    )
+                  ) : (
+                    <span>Selecionar período</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <div className="p-3 border-b flex justify-between items-center">
+                  <h4 className="font-medium text-sm">Selecionar período</h4>
+                  {dateRange?.from && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearDate}
+                      className="h-8 px-2 text-xs"
+                    >
+                      Limpar
+                    </Button>
+                  )}
+                </div>
+                <CalendarComponent
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange?.from}
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={2}
+                />
+              </PopoverContent>
+            </Popover>
+          )}
         </div>
       </div>
 

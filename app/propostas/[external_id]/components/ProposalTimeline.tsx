@@ -15,16 +15,22 @@ interface ProposalTimelineProps {
       title: string;
       description: string;
     }>;
+    voteId?: string;
+    hasVote?: boolean;
   }>;
   phases?: Phase[];
+  onVoteClick?: (voteId: string) => void;
 }
 
-export function ProposalTimeline({ timeline, phases }: ProposalTimelineProps) {
+export function ProposalTimeline({ timeline, phases, onVoteClick }: ProposalTimelineProps) {
   // Use the hook to process phases if no timeline is provided
   const processedTimeline = useProcessTimeline(phases);
   
   // Use provided timeline or processed timeline from phases
   const displayTimeline = timeline || processedTimeline;
+  
+  // Reverse the timeline to show most recent first
+  const reversedTimeline = displayTimeline ? [...displayTimeline].reverse() : [];
   
   return (
     <Card>
@@ -33,16 +39,19 @@ export function ProposalTimeline({ timeline, phases }: ProposalTimelineProps) {
         <CardDescription>Acompanhe o percurso desta proposta legislativa</CardDescription>
       </CardHeader>
       <CardContent>
-        {displayTimeline && displayTimeline.length > 0 ? (
+        {reversedTimeline && reversedTimeline.length > 0 ? (
           <Timeline>
-            {displayTimeline.map((item, index) => (
+            {reversedTimeline.map((item, index) => (
               <TimelineItem
                 key={`${item.title}-${index}`}
                 date={item.date}
                 title={item.title}
                 description={item.description}
                 subitems={item.subitems}
-                isLast={index === displayTimeline.length - 1}
+                voteId={item.voteId}
+                hasVote={item.hasVote}
+                onVoteClick={onVoteClick}
+                isLast={index === reversedTimeline.length - 1}
               />
             ))}
           </Timeline>

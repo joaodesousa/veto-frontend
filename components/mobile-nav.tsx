@@ -25,9 +25,10 @@ export function MobileSidebarNav({ isTransparent = false }: MobileSidebarNavProp
   const navItems = [
     { href: "/", label: "Início", icon: <Home className="h-5 w-5" /> },
     { href: "/propostas", label: "Propostas", icon: <FileText className="h-5 w-5" /> },
+    // { href: "/parlamento", label: "Parlamento", icon: <Building2 className="h-5 w-5" /> },
     // { href: "/deputados", label: "Deputados", icon: <Users className="h-5 w-5" /> },
     // { href: "/estatisticas", label: "Estatísticas", icon: <BarChart3 className="h-5 w-5" /> },
-    //{ href: "/sobre", label: "Sobre", icon: <Info className="h-5 w-5" /> },
+    // { href: "/sobre", label: "Sobre", icon: <Info className="h-5 w-5" /> },
   ]
 
   const isActive = (path: string) => pathname === path

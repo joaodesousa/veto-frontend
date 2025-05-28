@@ -1,19 +1,21 @@
 import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const baseUrl = 'https://veto.pt'
+  
   return [
     {
-      url: 'https://veto.pt',
+      url: baseUrl,
       lastModified: new Date(),
-      changeFrequency: 'weekly',
+      changeFrequency: 'daily',
       priority: 1,
     },
     {
-      url: 'https://veto.pt/about',
+      url: `${baseUrl}/propostas`,
       lastModified: new Date(),
-      changeFrequency: 'monthly',
+      changeFrequency: 'daily',
       priority: 0.8,
     },
-    // Add more URLs as needed
+    // Add more URLs here as pages become ready for public access
   ]
 } 

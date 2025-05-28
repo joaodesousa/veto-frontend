@@ -130,7 +130,7 @@ const formatAuthors = (proposal: Proposal): {
   return { authorsList, deputies, primaryParty };
 };
 
-// Enhanced function to format timeline data with commission subitems
+// Enhanced function to format timeline data with commission subitems and vote information
 const formatTimeline = (phases: Phase[] = [], proposalDate: string): {
   timeline: Array<{
     date: string;
@@ -141,6 +141,8 @@ const formatTimeline = (phases: Phase[] = [], proposalDate: string): {
       title: string;
       description: string;
     }>;
+    voteId?: string;
+    hasVote?: boolean;
   }>;
   status: string;
   lastUpdate: string;
@@ -156,13 +158,21 @@ const formatTimeline = (phases: Phase[] = [], proposalDate: string): {
     phaseGroups[key].push(phase);
   });
   
-  // Create timeline items from grouped phases with commission subitems
+  // Create timeline items from grouped phases with commission subitems and vote information
   const timeline = Object.entries(phaseGroups).map(([key, groupedPhases]) => {
     // Take name and date from the first phase in the group
     const { name, date, observation } = groupedPhases[0];
     const formattedDate = formatDate(date);
     
-    // Create the basic timeline item
+    // Check if this phase has votes
+    const phaseHasVotes = groupedPhases.some(phase => 
+      phase.votes && Array.isArray(phase.votes) && phase.votes.length > 0
+    );
+    
+    // Create a unique vote ID for this phase if it has votes
+    const voteId = phaseHasVotes ? `phase-${name}-${formattedDate}` : undefined;
+    
+    // Create the basic timeline item with vote information
     const timelineItem = {
       date: formattedDate,
       title: name,
@@ -171,32 +181,50 @@ const formatTimeline = (phases: Phase[] = [], proposalDate: string): {
         date: string;
         title: string;
         description: string;
-      }>
+      }>,
+      voteId: voteId,
+      hasVote: phaseHasVotes
     };
     
     // Extract commissions from all phases in this group to add as subitems
-    const commissions: Array<{ name: string; date?: string; observation?: string }> = [];
+    const commissions: Map<string, {
+      name: string;
+      date?: string;
+      observation?: string;
+    }> = new Map();
     
     groupedPhases.forEach(phase => {
       if (phase.commissions && Array.isArray(phase.commissions)) {
         phase.commissions.forEach(comm => {
-          if (comm.name && !commissions.some(c => c.name === comm.name)) {
-            commissions.push({
-              name: comm.name,
-              date: phase.date,
-              observation: comm.observation || ""
-            });
+          if (comm.name) {
+            const existingComm = commissions.get(comm.name);
+            
+            if (existingComm) {
+              // Merge observations if both have them
+              if (comm.observation && existingComm.observation) {
+                existingComm.observation = `${existingComm.observation}; ${comm.observation}`;
+              } else if (comm.observation) {
+                existingComm.observation = comm.observation;
+              }
+            } else {
+              // Add new commission
+              commissions.set(comm.name, {
+                name: comm.name,
+                date: phase.date,
+                observation: comm.observation || ""
+              });
+            }
           }
         });
       }
     });
     
-    // Add commissions as subitems
-    if (commissions.length > 0) {
-      timelineItem.subitems = commissions.map(comm => ({
+    // Add commissions as subitems (without vote information since votes belong to phases)
+    if (commissions.size > 0) {
+      timelineItem.subitems = Array.from(commissions.values()).map(comm => ({
         date: formatDate(comm.date || date),
         title: comm.name,
-        description: comm.observation || "Comissão parlamentar"
+        description: comm.observation || 'Comissão parlamentar'
       }));
     }
     
@@ -244,14 +272,14 @@ const formatVotes = (votes: Vote[] = [], phases: Phase[] = []): FormattedProposa
   };
   
   // Get all votes with parsedVote from all phases
-  const votesWithParsedVote: Vote[] = [];
+  const votesWithParsedVote: { vote: Vote; phaseName: string }[] = [];
   
   // Collect all votes with parsedVote from all phases
   phases.forEach(phase => {
     if (phase.votes && Array.isArray(phase.votes)) {
       phase.votes.forEach(vote => {
         if (vote.parsedVote) {
-          votesWithParsedVote.push(vote);
+          votesWithParsedVote.push({ vote, phaseName: phase.name });
         }
       });
     }
@@ -262,7 +290,7 @@ const formatVotes = (votes: Vote[] = [], phases: Phase[] = []): FormattedProposa
     voteData.hasVotes = true;
     
     // Process all votes with parsedVote
-    voteData.allVotes = votesWithParsedVote.map(vote => {
+    voteData.allVotes = votesWithParsedVote.map(({ vote, phaseName }) => {
       if (!vote.parsedVote) return {} as VoteRecord;
       
       const voteRecord: VoteRecord = {
@@ -272,7 +300,8 @@ const formatVotes = (votes: Vote[] = [], phases: Phase[] = []): FormattedProposa
         parties: {},
         result: vote.parsedVote.resultado || vote.result || "",
         date: vote.date ? formatDate(vote.date) : "",
-        description: vote.description || ""
+        description: vote.description || "",
+        phaseName: phaseName
       };
       
       // Process parties voting in favor
@@ -312,7 +341,8 @@ const formatVotes = (votes: Vote[] = [], phases: Phase[] = []): FormattedProposa
         parties: {},
         result: vote.result || "",
         date: vote.date ? formatDate(vote.date) : "",
-        description: vote.description || ""
+        description: vote.description || "",
+        phaseName: undefined
       };
       
       // Check if this vote has parsedVote directly
