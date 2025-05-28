@@ -58,17 +58,7 @@ export function Header() {
             </span>
           </Link>
         </div>
-        <nav className="hidden md:flex items-center gap-6">
-          <Link
-            href="/propostas"
-            className={cn(
-              "text-sm font-medium transition-colors hover:text-primary",
-              isHomePage && !scrolled ? "text-white/90 hover:text-white" : "",
-            )}
-          >
-            Propostas
-          </Link>
-        </nav>
+        
         <div className="flex items-center gap-2">
           <ThemeToggle isTransparent={isHomePage && !scrolled} />
           <Button
