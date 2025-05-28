@@ -330,6 +330,11 @@ function ProposalsContent() {
         setSelectedParties(prev => prev.filter(party => party !== value))
         break
     }
+    
+    // Reset to first page when filters change to avoid showing non-existent pages
+    if (initialLoadComplete) {
+      setCurrentPage(1);
+    }
   }
 
   // Get smart phase badges for display
@@ -533,7 +538,12 @@ function ProposalsContent() {
                         {dateRange.to && ` - ${dateRange.to.toLocaleDateString('pt-PT')}`}
                         <button 
                           className="ml-1 rounded-full hover:bg-muted"
-                          onClick={() => setDateRange(undefined)}
+                          onClick={() => {
+                            setDateRange(undefined);
+                            if (initialLoadComplete) {
+                              setCurrentPage(1);
+                            }
+                          }}
                         >
                           ✕
                         </button>
@@ -562,7 +572,11 @@ function ProposalsContent() {
                       // Extract party/author information
                       let partyDisplay = "Desconhecido";
                       if (proposal.IniAutorGruposParlamentares && Array.isArray(proposal.IniAutorGruposParlamentares) && proposal.IniAutorGruposParlamentares.length > 0) {
-                        partyDisplay = proposal.IniAutorGruposParlamentares[0].GP || "Desconhecido";
+                        // Show all parties, not just the first one
+                        partyDisplay = proposal.IniAutorGruposParlamentares
+                          .map((group: any) => group.GP || "")
+                          .filter(Boolean)
+                          .join(", ") || "Desconhecido";
                       } else if (proposal.IniAutorOutros?.nome) {
                         partyDisplay = proposal.IniAutorOutros.nome;
                       }

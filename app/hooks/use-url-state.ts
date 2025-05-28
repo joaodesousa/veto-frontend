@@ -58,8 +58,8 @@ export function useUrlState() {
     search: string,
     filters: FilterState
   }) => {
-    // Create a new URLSearchParams object from the current search params to preserve existing parameters
-    const urlParams = new URLSearchParams(searchParams.toString())
+    // Create a new URLSearchParams object
+    const urlParams = new URLSearchParams()
     
     // Only add parameters that have values
     if (params.page > 1) urlParams.set('page', params.page.toString())
@@ -80,7 +80,7 @@ export function useUrlState() {
     // Update URL without refreshing the page
     const url = window.location.pathname + (urlParams.toString() ? `?${urlParams.toString()}` : '')
     router.push(url, { scroll: false })
-  }, [router, searchParams])
+  }, [router])
   
   // Remove returnTo parameter
   const clearReturnTo = useCallback(() => {
