@@ -175,6 +175,7 @@ export interface FormattedProposal {
   phases: Phase[];
   relatedProposals?: RelatedProposal[];
   textLink: string | null;
+  legislature?: number;
 }
 
 export interface ApiResponse {
@@ -288,4 +289,52 @@ export interface Legislatura {
   startDate: string;
   endDate: string | null;
   initiativeCount: number;
+}
+
+// Deputy Statistics Types
+export interface DeputyStats {
+  totalDeputies: number;
+  byParty: Record<string, number>;
+  byDistrict: Record<string, number>;
+  byStatus: Record<string, any>;
+  legislature: string;
+  date?: string; // Add date for seat-based queries
+}
+
+export interface DeputyStatsResponse {
+  success: boolean;
+  data: DeputyStats;
+}
+
+// Seats API Types  
+export interface SeatsData {
+  legislature: string;
+  date: string;
+  totalSeats: number;
+  byParty: Record<string, number>;
+  byDistrict: Record<string, number>;
+}
+
+export interface SeatsResponse {
+  success: boolean;
+  data: SeatsData;
+}
+
+// Enhanced Party Vote with Deputy Information
+export interface PartyVoteWithDeputies {
+  party: string;
+  vote: "favor" | "against" | "abstention";
+  totalDeputies: number;
+  votingDeputies?: number;
+  dissidents?: Array<{
+    name?: string;
+    vote: "favor" | "against" | "abstention";
+  }>;
+  hasPartyVote?: boolean; // Indicates if this party had an official party vote or only individual deputies
+}
+
+// Enhanced Vote Record with Deputy Context
+export interface EnhancedVoteRecord extends VoteRecord {
+  partyVotesWithDeputies?: PartyVoteWithDeputies[];
+  deputyStats?: DeputyStats;
 }

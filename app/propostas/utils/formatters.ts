@@ -556,6 +556,7 @@ export function formatProposalData(proposal: Proposal): FormattedProposal {
     documents,
     phases: proposal.phases || [],
     relatedProposals,
-    textLink: proposal.text_link || null, 
+    textLink: proposal.text_link || null,
+    legislature: proposal.legislature,
   };
 }

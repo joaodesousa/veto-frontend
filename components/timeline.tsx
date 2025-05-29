@@ -41,6 +41,12 @@ export function TimelineItem({
   hasVote,
   onVoteClick
 }: TimelineItemProps) {
+  const handleVoteClick = () => {
+    if (voteId && onVoteClick) {
+      onVoteClick(voteId);
+    }
+  };
+
   return (
     <div className={cn("flex gap-4", className)}>
       <div className="flex flex-col items-center">
@@ -59,7 +65,7 @@ export function TimelineItem({
               variant="ghost"
               size="sm"
               className="h-6 px-2 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 self-start mt-1 sm:mt-0"
-              onClick={() => voteId && onVoteClick(voteId)}
+              onClick={handleVoteClick}
             >
               <Vote className="h-3 w-3 mr-1" />
               Ver Votação

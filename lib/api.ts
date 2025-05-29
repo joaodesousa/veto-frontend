@@ -1,6 +1,6 @@
 import { format } from "date-fns"
 import type { DateRange } from "react-day-picker"
-import type { ApiResponse, Author, Legislatura } from "./types"
+import type { ApiResponse, Author, Legislatura, DeputyStatsResponse, SeatsResponse } from "./types"
 
 /**
  * Fetch initiatives with optional filtering
@@ -349,4 +349,132 @@ export async function fetchProposals(params: {
     console.error("Error fetching proposals:", error);
     throw error;
   }
+}
+
+/**
+ * Fetch deputy statistics for a specific legislature
+ */
+export async function fetchDeputyStats(legislature: string): Promise<DeputyStatsResponse> {
+  try {
+    const API_BASE_URL = 'https://legis.veto.pt';
+    const response = await fetch(`${API_BASE_URL}/api/deputados/stats?legislature=${legislature}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching deputy statistics:', error);
+    return {
+      success: false,
+      data: {
+        totalDeputies: 0,
+        byParty: {},
+        byDistrict: {},
+        byStatus: {},
+        legislature: legislature
+      }
+    };
+  }
+}
+
+/**
+ * Normalize date to YYYY-MM-DD format for the seats API
+ */
+function normalizeDateForSeatsAPI(dateString: string): string {
+  // If already in YYYY-MM-DD format, return as is
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    return dateString;
+  }
+  
+  // Try to parse various formats and convert to YYYY-MM-DD
+  let date: Date;
+  
+  // Try DD/MM/YYYY format
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+    const [day, month, year] = dateString.split('/');
+    date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+  // Try MM/DD/YYYY format  
+  else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateString)) {
+    date = new Date(dateString);
+  }
+  // Try ISO date string
+  else {
+    date = new Date(dateString);
+  }
+  
+  // Convert to YYYY-MM-DD
+  if (isNaN(date.getTime())) {
+    console.error(`[normalizeDateForSeatsAPI] Invalid date: "${dateString}"`);
+    return dateString; // Return original if parsing fails
+  }
+  
+  const normalized = date.toISOString().split('T')[0];
+  return normalized;
+}
+
+/**
+ * Fetch seat counts for a specific legislature and date
+ */
+export async function fetchSeats(legislature: string, date: string): Promise<SeatsResponse> {
+  try {
+    const API_BASE_URL = 'https://legis.veto.pt';
+    const normalizedDate = normalizeDateForSeatsAPI(date);
+    const url = `${API_BASE_URL}/api/deputados/seats?legislature=${legislature}&date=${normalizedDate}`;
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching seat data:', error);
+    return {
+      success: false,
+      data: {
+        legislature: legislature,
+        date: date,
+        totalSeats: 0,
+        byParty: {},
+        byDistrict: {}
+      }
+    };
+  }
+}
+
+/**
+ * Fetch deputy stats with seat data for a specific date, fallback to general stats
+ */
+export async function fetchDeputyStatsForDate(legislature: string, date?: string): Promise<DeputyStatsResponse> {
+  // If we have a date, try to get seat data first
+  if (date) {
+    try {
+      const seatsResponse = await fetchSeats(legislature, date);
+      if (seatsResponse.success && seatsResponse.data.totalSeats > 0) {
+        // Convert seats data to deputy stats format
+        return {
+          success: true,
+          data: {
+            totalDeputies: seatsResponse.data.totalSeats,
+            byParty: seatsResponse.data.byParty,
+            byDistrict: seatsResponse.data.byDistrict,
+            byStatus: {},
+            legislature: seatsResponse.data.legislature,
+            date: seatsResponse.data.date
+          }
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching seat data, falling back to general stats:', error);
+    }
+  }
+  
+  // Fallback to general deputy stats
+  return fetchDeputyStats(legislature);
 }

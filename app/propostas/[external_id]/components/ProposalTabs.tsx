@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProposalAbout } from "./ProposalAbout"
 import { ProposalTimeline } from "./ProposalTimeline"
-import { ProposalVoting } from "./ProposalVoting"
+import { EnhancedProposalVoting } from "./EnhancedProposalVoting"
 import { ProposalDocuments } from "./ProposalDocuments"
 import { Phase, TimelineItem } from "@/lib/types"
 
@@ -42,6 +42,7 @@ interface ProposalTabsProps {
     phases?: Phase[];         // Raw phases data (optional)
     votes: VotesData;
     documents: DocumentItem[];
+    legislature?: number;     // Add legislature information
   }
 }
 
@@ -52,6 +53,22 @@ export function ProposalTabs({ proposal }: ProposalTabsProps) {
   const handleVoteClick = (voteId: string) => {
     setScrollToVoteId(voteId);
     setActiveTab("voting");
+  };
+
+  // Convert legislature number to Roman numeral string
+  const getLegislatureString = (legislature?: number): string => {
+    if (!legislature) return "XV"; // Default to XV if not provided
+    
+    // Simple conversion to Roman numerals for common legislatures
+    const romanNumerals: Record<number, string> = {
+      13: "XIII",
+      14: "XIV", 
+      15: "XV",
+      16: "XVI",
+      17: "XVII"
+    };
+    
+    return romanNumerals[legislature] || legislature.toString();
   };
 
   return (
@@ -72,9 +89,10 @@ export function ProposalTabs({ proposal }: ProposalTabsProps) {
         </TabsContent>
         
         <TabsContent value="voting" className="mt-4">
-          <ProposalVoting 
+          <EnhancedProposalVoting 
             votes={proposal.votes} 
             scrollToVoteId={scrollToVoteId}
+            legislature={getLegislatureString(proposal.legislature)}
           />
         </TabsContent>
         

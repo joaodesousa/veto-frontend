@@ -1,5 +1,32 @@
 import { Proposal, ApiResponse, DashboardStats } from './types';
 
+// Helper function to convert Roman numerals to numbers
+function romanToNumber(roman: string | number): number {
+  if (typeof roman === 'number') return roman;
+  if (!roman || typeof roman !== 'string') return 0;
+  
+  const romanNumerals: Record<string, number> = {
+    'XIII': 13,
+    'XIV': 14,
+    'XV': 15,
+    'XVI': 16,
+    'XVII': 17,
+    'XVIII': 18
+  };
+  
+  // Try exact match first
+  if (romanNumerals[roman.toUpperCase()]) {
+    return romanNumerals[roman.toUpperCase()];
+  }
+  
+  // If it's already a number string, parse it
+  const parsed = parseInt(roman);
+  if (!isNaN(parsed)) {
+    return parsed;
+  }
+  
+  return 0;
+}
 
 /**
  * Fetch a proposal by its external ID - Server-side version with improved error handling
@@ -44,7 +71,7 @@ export async function getProposalForId(externalId: string): Promise<Proposal | n
       title: data.IniTitulo || '',
       type: data.IniTipo || '',
       descType: data.IniDescTipo || '',
-      legislature: parseInt(data.IniLeg) || 0,
+      legislature: romanToNumber(data.IniLeg),
       date: data.DataInicioleg || '',
       link: data.IniLinkTexto || '',
       // Process authors based on structure from api_struct.txt
@@ -219,7 +246,7 @@ export async function getHomePageProposals(limit: number = 4): Promise<{ proposa
           title: item.IniTitulo || '',
           type: item.IniTipo || '',
           descType: item.IniDescTipo || '',
-          legislature: parseInt(item.IniLeg) || 0,
+          legislature: romanToNumber(item.IniLeg),
           date: item.DataInicioleg || '',
           link: item.IniLinkTexto || '',
           // Store minimal author information
