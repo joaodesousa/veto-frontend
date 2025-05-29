@@ -8,13 +8,6 @@ export function middleware(req: NextRequest) {
         return NextResponse.next();
     }
 
-    if (host?.startsWith("2025.")) {
-        const url = req.nextUrl;
-        console.log("Rewriting to:", `/2025${url.pathname}`);
-
-        return NextResponse.rewrite(url);
-    }
-
     return NextResponse.next();
 }
 

@@ -55,9 +55,6 @@ export async function getProposalForId(externalId: string): Promise<Proposal | n
     // Extract the actual data from the nested structure
     const data = apiResponse.data;
     
-    // Debug the IniDescTipo field
-    console.log("API Response IniDescTipo:", data?.IniDescTipo);
-    console.log("API Response IniTipo:", data?.IniTipo);
     
     // Check if data exists
     if (!data) {

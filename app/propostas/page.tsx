@@ -44,7 +44,6 @@ function ProposalsContent() {
   
   // Debug log to track page changes
   useEffect(() => {
-    console.log(`Page changed to: ${currentPage}, initial page was: ${initialPage}`);
   }, [currentPage, initialPage])
 
   // Filtering and search states - initialized from URL
@@ -630,7 +629,6 @@ function ProposalsContent() {
                     currentPage={currentPage}
                     totalPages={Math.ceil(totalProposals / 20)}
                     onPageChange={(page) => {
-                      console.log(`User clicked to navigate to page: ${page}`);
                       setCurrentPage(page);
                     }}
                   />
