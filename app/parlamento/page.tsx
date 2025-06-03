@@ -112,10 +112,17 @@ const partyConfig: Record<string, { name: string; color: string; leader?: string
 
 interface ApiDeputy {
   _id: string
+  CadId?: number
   DepCadId?: number
   DepNomeCompleto: string
   DepNomeParlamentar: string
   DepCPDes: string
+  CadProfissao?: string
+  CadDtNascimento?: string
+  CadDeputadoLegis?: Array<{
+    // Legislature history - we'll use this to count mandates
+    [key: string]: any
+  }>
   DepGP: Array<{
     gpSigla: string
     gpDtInicio: string
@@ -161,21 +168,33 @@ const loadParliamentChart = async () => {
   try {
     // @ts-ignore - d3-parliament-chart doesn't have types
     const module = await import('d3-parliament-chart')
-    console.log('Full d3-parliament-chart module:', module)
-    console.log('Module keys:', Object.keys(module))
-    console.log('Default export:', module.default)
-    console.log('Type of default:', typeof module.default)
     
     // Try different possible exports
     const parliamentChart = module.default || module.parliamentChart || module
-    console.log('Final parliamentChart:', parliamentChart)
-    console.log('Type of parliamentChart:', typeof parliamentChart)
     
     return parliamentChart
   } catch (error) {
     console.error('Failed to load d3-parliament-chart:', error)
     return null
   }
+}
+
+// Helper function to calculate age from birth date
+const calculateAge = (birthDateString: string): number | undefined => {
+  if (!birthDateString) return undefined
+  
+  const birthDate = new Date(birthDateString)
+  if (isNaN(birthDate.getTime())) return undefined
+  
+  const today = new Date()
+  let age = today.getFullYear() - birthDate.getFullYear()
+  const monthDiff = today.getMonth() - birthDate.getMonth()
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--
+  }
+  
+  return age
 }
 
 // Mobile detection hook
@@ -211,6 +230,7 @@ export default function ParliamentPage() {
   const [filterType, setFilterType] = useState<'partidos' | 'idade' | 'experiencia'>('partidos')
   const svgRef = useRef<SVGSVGElement>(null)
   const isMobile = useIsMobile()
+  const [hoveredSegment, setHoveredSegment] = useState<any>(null)
 
   // Fetch deputy data from API
   useEffect(() => {
@@ -242,7 +262,7 @@ export default function ParliamentPage() {
           
           return {
             id: apiDeputy._id,
-            photoId: apiDeputy.DepCadId?.toString() || "",
+            photoId: apiDeputy.CadId?.toString() || "",
             name: apiDeputy.DepNomeParlamentar,
             fullName: apiDeputy.DepNomeCompleto,
             party: partyCode,
@@ -250,11 +270,9 @@ export default function ParliamentPage() {
             color: config.color,
             constituency: apiDeputy.DepCPDes,
             status: currentStatus?.sioDes || "Unknown",
-            // Placeholder biographical data (to be replaced with real data later)
-            age: Math.floor(Math.random() * 40) + 30, // Random age between 30-70
-            profession: ["Advogado/a", "Professor/a", "Médico/a", "Engenheiro/a", "Empresário/a", "Jornalista", "Economista"][Math.floor(Math.random() * 7)],
-            education: ["Direito", "Economia", "Medicina", "Engenharia", "Ciências Políticas", "Gestão", "Sociologia"][Math.floor(Math.random() * 7)],
-            mandates: Math.floor(Math.random() * 5) + 1, // 1-5 mandates
+            age: calculateAge(apiDeputy.CadDtNascimento || "") || undefined,
+            profession: apiDeputy.CadProfissao,
+            mandates: apiDeputy.CadDeputadoLegis?.length || 1, // Count actual legislatures
             committees: ["Educação", "Saúde", "Economia", "Defesa", "Ambiente"][Math.floor(Math.random() * 3)]
           }
         })
@@ -329,15 +347,14 @@ export default function ParliamentPage() {
         }
       })
       
-      console.log('Ordered chart data:', orderedData.map(p => `${p.party}: ${p.seats}`))
       return orderedData
     } else if (filterType === 'idade') {
       // Age groups with grey to black gradient
       const ageGroups = [
-        { range: "≤35", name: "Jovens (≤35 anos)", color: "#D1D5DB", min: 0, max: 35 },
-        { range: "36-50", name: "Adultos (36-50 anos)", color: "#9CA3AF", min: 36, max: 50 },
-        { range: "51-65", name: "Experientes (51-65 anos)", color: "#6B7280", min: 51, max: 65 },
-        { range: "66+", name: "Seniores (66+ anos)", color: "#374151", min: 66, max: 100 }
+        { range: "<30", name: "Menos de 30", color: "#D1D5DB", min: 0, max: 29 },
+        { range: "30-49", name: "30 a 49", color: "#9CA3AF", min: 30, max: 49 },
+        { range: "50-65", name: "50 a 65", color: "#6B7280", min: 50, max: 65 },
+        { range: ">65", name: "Mais de 65", color: "#374151", min: 66, max: 100 }
       ]
       
       // Count deputies in each age group
@@ -356,12 +373,29 @@ export default function ParliamentPage() {
       
       return ageCounts
     } else if (filterType === 'experiencia') {
-      // Placeholder for experience data (to be implemented later)
-      return [
-        { seats: 80, color: "#D1D5DB", party: "Novo", name: "Novos (1º mandato)" },
-        { seats: 100, color: "#6B7280", party: "Experiente", name: "Experientes (2-4 mandatos)" },
-        { seats: 50, color: "#374151", party: "Veterano", name: "Veteranos (5+ mandatos)" }
+      // Experience groups based on real mandate data
+      const experienceGroups = [
+        { range: "1º", name: "1º Mandato", color: "#D1D5DB", min: 1, max: 1 },
+        { range: "2-3", name: "2 a 3 Mandatos", color: "#9CA3AF", min: 2, max: 3 },
+        { range: "4-5", name: "4 a 5 Mandatos", color: "#6B7280", min: 4, max: 5 },
+        { range: "6+", name: "6 ou mais Mandatos", color: "#374151", min: 6, max: 20 }
       ]
+      
+      // Count deputies in each experience group
+      const experienceCounts = experienceGroups.map(group => {
+        const count = deputies.filter(deputy => 
+          deputy.mandates && deputy.mandates >= group.min && deputy.mandates <= group.max
+        ).length
+        
+        return {
+          seats: count,
+          color: group.color,
+          party: group.range,
+          name: group.name
+        }
+      }).filter(group => group.seats > 0)
+      
+      return experienceCounts
     }
     return []
   }, [parliamentData, deputies, filterType])
@@ -396,15 +430,17 @@ export default function ParliamentPage() {
     if (filterType === 'partidos') {
       return deputy.color
     } else if (filterType === 'idade') {
-      const age = deputy.age || 0
-      if (age <= 35) return "#D1D5DB"
-      if (age <= 50) return "#9CA3AF" 
+      const age = deputy.age
+      if (!age) return "#9CA3AF" // Gray for unknown ages
+      if (age < 30) return "#D1D5DB"
+      if (age <= 49) return "#9CA3AF" 
       if (age <= 65) return "#6B7280"
       return "#374151"
     } else if (filterType === 'experiencia') {
       const mandates = deputy.mandates || 1
       if (mandates === 1) return "#D1D5DB"
-      if (mandates <= 4) return "#6B7280"
+      if (mandates <= 3) return "#9CA3AF"
+      if (mandates <= 5) return "#6B7280"
       return "#374151"
     }
     return deputy.color
@@ -464,8 +500,6 @@ export default function ParliamentPage() {
 
   // Fallback parliament visualization using pure d3
   const renderFallbackChart = (svg: any, width: number, height: number) => {
-    console.log('Rendering fallback chart with data:', chartData)
-    
     const totalSeats = deputyMapping.length
     let seatIndex = 0
     
@@ -496,13 +530,14 @@ export default function ParliamentPage() {
           .attr("stroke", "none")
           .attr("stroke-width", 0)
           .attr("cursor", "pointer")
+          .style("pointer-events", "auto")
           .on("mouseover", function(this: SVGCircleElement) {
             // Show deputy info
             const deputy = deputyMapping[seatIndex]
             if (deputy) {
               setHoveredDeputy(deputy)
-              // Only highlight party members on age filter
-              if (filterType === 'idade') {
+              // Highlight party members on age and experience filters
+              if (filterType === 'idade' || filterType === 'experiencia') {
                 setHighlightedParty(deputy.party)
                 applyPartyHighlighting(svg, deputy.party)
               }
@@ -511,8 +546,8 @@ export default function ParliamentPage() {
           .on("mouseout", function(this: SVGCircleElement) {
             if (!pinnedDeputy) {
               setHoveredDeputy(null)
-              // Only clear highlighting on age filter
-              if (filterType === 'idade') {
+              // Clear highlighting on age and experience filters
+              if (filterType === 'idade' || filterType === 'experiencia') {
                 setHighlightedParty(null)
                 clearPartyHighlighting(svg)
               }
@@ -522,8 +557,8 @@ export default function ParliamentPage() {
             const deputy = deputyMapping[seatIndex]
             if (deputy) {
               setPinnedDeputy(deputy)
-              // Only highlight party members on age filter
-              if (filterType === 'idade') {
+              // Highlight party members on age and experience filters
+              if (filterType === 'idade' || filterType === 'experiencia') {
                 setHighlightedParty(deputy.party)
                 applyPartyHighlighting(svg, deputy.party)
               }
@@ -545,15 +580,11 @@ export default function ParliamentPage() {
     const width = 800
     const height = 400
 
-    console.log('Attempting to render chart with data:', chartData)
-
     const renderChart = async () => {
       try {
         const parliamentChart = await loadParliamentChart()
         
         if (parliamentChart) {
-          console.log('Successfully loaded d3-parliament-chart, attempting different usage patterns...')
-          
           // Try different usage patterns based on the documentation
           let chart
           
@@ -561,41 +592,30 @@ export default function ParliamentPage() {
           try {
             if (typeof parliamentChart === 'function') {
               chart = parliamentChart()
-              console.log('Pattern 1 worked - direct function call')
             } else {
               throw new Error('Not a function')
             }
           } catch (e) {
-            console.log('Pattern 1 failed:', e)
-            
             // Pattern 2: Check if it's attached to d3
             try {
               // @ts-ignore
               if (d3.parliamentChart && typeof d3.parliamentChart === 'function') {
                 // @ts-ignore
                 chart = d3.parliamentChart()
-                console.log('Pattern 2 worked - d3.parliamentChart')
               } else {
                 throw new Error('d3.parliamentChart not found')
               }
             } catch (e2) {
-              console.log('Pattern 2 failed:', e2)
-              
               // Pattern 3: Try calling parliamentChart directly if it's a constructor
               try {
                 chart = new parliamentChart()
-                console.log('Pattern 3 worked - constructor call')
               } catch (e3) {
-                console.log('Pattern 3 failed:', e3)
                 throw new Error('All patterns failed')
               }
             }
           }
           
           if (chart) {
-            console.log('Chart object created:', chart)
-            console.log('Chart methods:', Object.keys(chart))
-            
             // Configure the chart
             chart
               .width(width)
@@ -615,6 +635,7 @@ export default function ParliamentPage() {
             // Add click handlers
             svg.selectAll("circle")
               .style("cursor", "pointer")
+              .style("pointer-events", "auto")
               .attr("fill", (d: any, i: number) => {
                 // Apply color based on current filter
                 const deputy = deputyMapping[i]
@@ -627,8 +648,8 @@ export default function ParliamentPage() {
                 const deputy = deputyMapping[hoveredSeatIndex]
                 if (deputy) {
                   setHoveredDeputy(deputy)
-                  // Only highlight party members on age filter
-                  if (filterType === 'idade') {
+                  // Highlight party members on age and experience filters
+                  if (filterType === 'idade' || filterType === 'experiencia') {
                     setHighlightedParty(deputy.party)
                     applyPartyHighlighting(svg, deputy.party)
                   }
@@ -637,8 +658,8 @@ export default function ParliamentPage() {
               .on("mouseout", function(this: any) {
                 if (!pinnedDeputy) {
                   setHoveredDeputy(null)
-                  // Only clear highlighting on age filter
-                  if (filterType === 'idade') {
+                  // Clear highlighting on age and experience filters
+                  if (filterType === 'idade' || filterType === 'experiencia') {
                     setHighlightedParty(null)
                     clearPartyHighlighting(svg)
                   }
@@ -650,15 +671,14 @@ export default function ParliamentPage() {
                 const deputy = deputyMapping[clickedSeatIndex]
                 if (deputy) {
                   setPinnedDeputy(deputy)
-                  // Only highlight party members on age filter
-                  if (filterType === 'idade') {
+                  // Highlight party members on age and experience filters
+                  if (filterType === 'idade' || filterType === 'experiencia') {
                     setHighlightedParty(deputy.party)
                     applyPartyHighlighting(svg, deputy.party)
                   }
                 }
               })
 
-            console.log('d3-parliament-chart rendered successfully!')
             return // Success, exit early
           }
         }
@@ -680,11 +700,175 @@ export default function ParliamentPage() {
   const totalSeats = parliamentData.reduce((sum, party) => sum + party.seats, 0)
 
   if (loading) {
+    // Mobile skeleton
+    if (isMobile) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-[#0a0b17] via-[#111936] to-[#0c1023] text-white">
+          <div className="container relative z-10 mx-auto p-6 pt-24 pb-32">
+            {/* Parliament Information */}
+            <div className="border-b border-white/10">
+              <div className="container py-8">
+                <div className="flex flex-col gap-4">
+                  <h1 className="text-3xl font-bold tracking-tight">Parlamento Português</h1>
+                  <p className="text-gray-400">
+                    XVI Legislatura • 230 Deputados • Palácio de São Bento, Lisboa
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Parliament Overview Skeleton */}
+            <div className="py-8 space-y-6">
+              {/* Quick Stats Skeleton */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                  <div className="text-center">
+                    <div className="h-8 w-16 bg-white/20 rounded-lg animate-pulse mx-auto mb-2"></div>
+                    <div className="h-4 w-20 bg-white/10 rounded-lg animate-pulse mx-auto"></div>
+                  </div>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                  <div className="text-center">
+                    <div className="h-8 w-12 bg-white/20 rounded-lg animate-pulse mx-auto mb-2"></div>
+                    <div className="h-4 w-16 bg-white/10 rounded-lg animate-pulse mx-auto"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Party Breakdown Skeleton */}
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-5 h-5 bg-white/20 rounded animate-pulse"></div>
+                  <div className="h-6 w-48 bg-white/20 rounded-lg animate-pulse"></div>
+                </div>
+                <div className="space-y-3">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-4 h-4 bg-white/20 rounded-full animate-pulse"></div>
+                        <div className="flex flex-col gap-1">
+                          <div className="h-4 w-12 bg-white/20 rounded animate-pulse"></div>
+                          <div className="h-3 w-32 bg-white/10 rounded animate-pulse"></div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="h-4 w-8 bg-white/20 rounded animate-pulse mb-1"></div>
+                        <div className="h-3 w-12 bg-white/10 rounded animate-pulse"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Demographics Skeletons */}
+              {Array.from({ length: 2 }).map((_, index) => (
+                <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-5 h-5 bg-white/20 rounded animate-pulse"></div>
+                    <div className="h-6 w-36 bg-white/20 rounded-lg animate-pulse"></div>
+                  </div>
+                  <div className="space-y-3">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} className="flex items-center justify-between">
+                        <div className="h-4 w-24 bg-white/10 rounded animate-pulse"></div>
+                        <div className="h-4 w-6 bg-white/20 rounded animate-pulse"></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {/* Interactive Notice */}
+              <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm rounded-xl p-6 border border-blue-500/30">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-blue-600/30 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <Monitor className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-lg font-semibold text-white mb-2">
+                      Visualização Interativa
+                    </h4>
+                    <p className="text-gray-300 text-sm mb-3 leading-relaxed">
+                      Explore a composição do Parlamento de forma interativa num ecrã maior. 
+                      Veja deputados individuais, filtre por idade ou experiência, e descubra 
+                      detalhes sobre cada representante.
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-blue-400">
+                      <Monitor className="w-4 h-4" />
+                      <span>Disponível em desktop e tablet</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    // Desktop skeleton
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0b17] via-[#111936] to-[#0c1023] text-white flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-400" />
-          <p className="text-lg text-gray-400">A carregar dados do Parlamento...</p>
+      <div className="min-h-screen bg-gradient-to-br from-[#0a0b17] via-[#111936] to-[#0c1023] text-white overflow-hidden">
+        <div className="container relative z-10 mx-auto p-6 pt-24 pb-32">
+          {/* Parliament Information */}
+          <div className="border-b">
+            <div className="container py-8">
+              <div className="flex flex-col gap-4">
+                <h1 className="text-3xl font-bold tracking-tight">Parlamento Português</h1>
+                <p className="text-muted-foreground">
+                  XVI Legislatura • 230 Deputados • Palácio de São Bento, Lisboa
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Filter Buttons */}
+          <div className="flex items-center justify-center gap-4 mb-8 mt-12">
+            <span className="text-sm text-gray-400">Ver por:</span>
+            <div className="flex gap-2">
+              <div className="px-6 py-2 rounded-full text-sm font-medium bg-blue-600 text-white shadow-lg">
+                Partidos
+              </div>
+              <div className="px-6 py-2 rounded-full text-sm font-medium bg-white/10 text-gray-300 border border-white/20">
+                Idade
+              </div>
+              <div className="px-6 py-2 rounded-full text-sm font-medium bg-white/10 text-gray-300 border border-white/20">
+                Mandatos
+              </div>
+            </div>
+          </div>
+
+          {/* Legend Skeleton */}
+          <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-white/20 rounded-full animate-pulse"></div>
+                <div className="h-4 w-12 bg-white/10 rounded animate-pulse"></div>
+                <div className="h-3 w-8 bg-white/5 rounded animate-pulse"></div>
+              </div>
+            ))}
+          </div>
+
+          {/* Parliament Visualization Skeleton */}
+          <div className="flex justify-center -mb-24 relative z-20 pointer-events-none">
+            <div className="pointer-events-none">
+              <div className="w-[800px] h-[400px] bg-white/5 rounded-lg animate-pulse flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-white/10 rounded-full animate-pulse mx-auto mb-4"></div>
+                  <div className="h-4 w-32 bg-white/10 rounded animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Pie Chart Skeleton */}
+          <div className="flex justify-center mb-8 relative z-10">
+            <div className="w-64 h-64 relative">
+              <div className="w-full h-full bg-white/5 rounded-full animate-pulse flex items-center justify-center">
+                <div className="w-24 h-24 bg-white/10 rounded-full animate-pulse"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -725,60 +909,141 @@ export default function ParliamentPage() {
             </div>
           </div>
 
-          {/* Mobile Fallback Message */}
-          <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-8 text-center max-w-md mx-auto">
-              <div className="mb-6">
-                <div className="w-16 h-16 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Monitor className="w-8 h-8 text-blue-400" />
-                </div>
-                <h2 className="text-xl font-bold text-white mb-3">
-                  Visualização Disponível no Desktop
-                </h2>
-                <p className="text-gray-300 leading-relaxed mb-6">
-                  A visualização interativa do Parlamento está otimizada para dispositivos com ecrãs maiores. 
-                  Para a melhor experiência, aceda através de um computador ou tablet.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/10">
-                  <Smartphone className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-white">Dispositivo Móvel</p>
-                    <p className="text-xs text-gray-400">Funcionalidade limitada</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3 p-3 bg-blue-600/10 rounded-lg border border-blue-500/20">
-                  <Monitor className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-white">Desktop/Tablet</p>
-                    <p className="text-xs text-gray-400">Experiência completa</p>
-                  </div>
+          {/* Mobile Parliament Overview */}
+          <div className="py-8 space-y-6">
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-400 mb-2">{totalSeats}</div>
+                  <div className="text-sm text-gray-300">Deputados</div>
                 </div>
               </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-green-400 mb-2">{parliamentData.length}</div>
+                  <div className="text-sm text-gray-300">Partidos</div>
+                </div>
+              </div>
+            </div>
 
-              <div className="mt-6 pt-6 border-t border-white/10">
-                <h3 className="text-sm font-semibold text-white mb-3">Composição Atual</h3>
-                <div className="space-y-2">
-                  {parliamentData.slice(0, 5).map(party => (
-                    <div key={party.party} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: party.color }}
-                        />
-                        <span className="text-gray-300">{party.party}</span>
+            {/* Party Breakdown */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Users className="w-5 h-5 text-blue-400" />
+                Composição Partidária
+              </h3>
+              <div className="space-y-3">
+                {parliamentData.map(party => (
+                  <div key={party.party} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-4 h-4 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: party.color }}
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-white font-medium">{party.party}</span>
+                        <span className="text-xs text-gray-400">{party.name}</span>
                       </div>
-                      <span className="text-white font-medium">{party.seats}</span>
                     </div>
-                  ))}
-                  {parliamentData.length > 5 && (
-                    <div className="text-xs text-gray-400 pt-2">
-                      +{parliamentData.length - 5} outros partidos
+                    <div className="text-right">
+                      <div className="text-white font-semibold">{party.seats}</div>
+                      <div className="text-xs text-gray-400">
+                        {((party.seats / totalSeats) * 100).toFixed(1)}%
+                      </div>
                     </div>
-                  )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Age Demographics */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-purple-400" />
+                Demografia Etária
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-300">Menos de 30</span>
+                  <span className="text-white font-medium">
+                    {deputies.filter(d => d.age && d.age < 30).length}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-300">30 a 49 anos</span>
+                  <span className="text-white font-medium">
+                    {deputies.filter(d => d.age && d.age >= 30 && d.age <= 49).length}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-300">50 a 65 anos</span>
+                  <span className="text-white font-medium">
+                    {deputies.filter(d => d.age && d.age >= 50 && d.age <= 65).length}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-300">Mais de 65</span>
+                  <span className="text-white font-medium">
+                    {deputies.filter(d => d.age && d.age >= 66).length}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Experience Levels */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <GraduationCap className="w-5 h-5 text-orange-400" />
+                Experiência Parlamentar
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-300">1º Mandato</span>
+                  <span className="text-white font-medium">
+                    {deputies.filter(d => d.mandates === 1).length}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-300">2 a 3 Mandatos</span>
+                  <span className="text-white font-medium">
+                    {deputies.filter(d => d.mandates && d.mandates >= 2 && d.mandates <= 3).length}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-300">4 a 5 Mandatos</span>
+                  <span className="text-white font-medium">
+                    {deputies.filter(d => d.mandates && d.mandates >= 4 && d.mandates <= 5).length}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-300">6 ou mais Mandatos</span>
+                  <span className="text-white font-medium">
+                    {deputies.filter(d => d.mandates && d.mandates >= 6).length}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Interactive Version Notice */}
+            <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm rounded-xl p-6 border border-blue-500/30">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-blue-600/30 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <Monitor className="w-6 h-6 text-blue-400" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-lg font-semibold text-white mb-2">
+                    Visualização Interativa
+                  </h4>
+                  <p className="text-gray-300 text-sm mb-3 leading-relaxed">
+                    Explore a composição do Parlamento de forma interativa num ecrã maior. 
+                    Veja deputados individuais, filtre por idade ou experiência, e descubra 
+                    detalhes sobre cada representante.
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-blue-400">
+                    <Monitor className="w-4 h-4" />
+                    <span>Disponível em desktop e tablet</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -861,32 +1126,41 @@ export default function ParliamentPage() {
             <>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded-full bg-[#D1D5DB] flex-shrink-0" />
-                <span className="text-sm text-gray-300 leading-4">≤35 anos</span>
+                <span className="text-sm text-gray-300 leading-4">Menos de 30</span>
                 <span className="text-xs text-gray-400 leading-4">
-                  ({deputies.filter(d => d.age && d.age <= 35).length})
+                  ({deputies.filter(d => d.age && d.age <= 29).length})
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded-full bg-[#9CA3AF] flex-shrink-0" />
-                <span className="text-sm text-gray-300 leading-4">36-50 anos</span>
+                <span className="text-sm text-gray-300 leading-4">30 a 49</span>
                 <span className="text-xs text-gray-400 leading-4">
-                  ({deputies.filter(d => d.age && d.age >= 36 && d.age <= 50).length})
+                  ({deputies.filter(d => d.age && d.age >= 30 && d.age <= 49).length})
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded-full bg-[#6B7280] flex-shrink-0" />
-                <span className="text-sm text-gray-300 leading-4">51-65 anos</span>
+                <span className="text-sm text-gray-300 leading-4">50 a 65</span>
                 <span className="text-xs text-gray-400 leading-4">
-                  ({deputies.filter(d => d.age && d.age >= 51 && d.age <= 65).length})
+                  ({deputies.filter(d => d.age && d.age >= 50 && d.age <= 65).length})
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded-full bg-[#374151] flex-shrink-0" />
-                <span className="text-sm text-gray-300 leading-4">66+ anos</span>
+                <span className="text-sm text-gray-300 leading-4">Mais de 65</span>
                 <span className="text-xs text-gray-400 leading-4">
                   ({deputies.filter(d => d.age && d.age >= 66).length})
                 </span>
               </div>
+              {deputies.filter(d => !d.age).length > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-[#9CA3AF] flex-shrink-0" />
+                  <span className="text-sm text-gray-300 leading-4">Idade desconhecida</span>
+                  <span className="text-xs text-gray-400 leading-4">
+                    ({deputies.filter(d => !d.age).length})
+                  </span>
+                </div>
+              )}
             </>
           )}
           
@@ -894,23 +1168,30 @@ export default function ParliamentPage() {
             <>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded-full bg-[#D1D5DB] flex-shrink-0" />
-                <span className="text-sm text-gray-300 leading-4">1º mandato</span>
+                <span className="text-sm text-gray-300 leading-4">1º Mandato</span>
                 <span className="text-xs text-gray-400 leading-4">
                   ({deputies.filter(d => d.mandates === 1).length})
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-[#6B7280] flex-shrink-0" />
-                <span className="text-sm text-gray-300 leading-4">2-4 mandatos</span>
+                <div className="w-4 h-4 rounded-full bg-[#9CA3AF] flex-shrink-0" />
+                <span className="text-sm text-gray-300 leading-4">2 a 3 Mandatos</span>
                 <span className="text-xs text-gray-400 leading-4">
-                  ({deputies.filter(d => d.mandates && d.mandates >= 2 && d.mandates <= 4).length})
+                  ({deputies.filter(d => d.mandates && d.mandates >= 2 && d.mandates <= 3).length})
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full bg-[#6B7280] flex-shrink-0" />
+                <span className="text-sm text-gray-300 leading-4">4 a 5 Mandatos</span>
+                <span className="text-xs text-gray-400 leading-4">
+                  ({deputies.filter(d => d.mandates && d.mandates >= 4 && d.mandates <= 5).length})
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded-full bg-[#374151] flex-shrink-0" />
-                <span className="text-sm text-gray-300 leading-4">5+ mandatos</span>
+                <span className="text-sm text-gray-300 leading-4">6 ou mais Mandatos</span>
                 <span className="text-xs text-gray-400 leading-4">
-                  ({deputies.filter(d => d.mandates && d.mandates >= 5).length})
+                  ({deputies.filter(d => d.mandates && d.mandates >= 6).length})
                 </span>
               </div>
             </>
@@ -918,36 +1199,39 @@ export default function ParliamentPage() {
         </div>
 
         {/* Parliament Visualization */}
-        <div className="flex justify-center -mb-24 relative z-20" onClick={() => {
+        <div className="flex justify-center -mb-24 relative z-20 pointer-events-none" onClick={() => {
           setPinnedDeputy(null)
-          if (filterType === 'idade') {
+          if (filterType === 'idade' || filterType === 'experiencia') {
             setHighlightedParty(null)
             const svg = d3.select(svgRef.current)
             clearPartyHighlighting(svg)
           }
         }}>
-          <div className="">
+          <div className="pointer-events-none">
                   <svg
                     ref={svgRef}
-                    className="w-full h-auto relative z-30"
+                    className="w-full h-auto relative z-30 pointer-events-none"
                     onClick={(e) => e.stopPropagation()}
                   />
           </div>
                 </div>
                 
         {/* Pie Chart / Deputy Bio - Below Parliament */}
-        <div className="flex justify-center mb-8 relative z-10" onClick={() => {
-          setPinnedDeputy(null)
-          if (filterType === 'idade') {
-            setHighlightedParty(null)
-            const svg = d3.select(svgRef.current)
-            clearPartyHighlighting(svg)
-          }
-        }}>
+        <div 
+          className="flex justify-center mb-8 relative z-10" 
+          onClick={() => {
+            setPinnedDeputy(null)
+            if (filterType === 'idade' || filterType === 'experiencia') {
+              setHighlightedParty(null)
+              const svg = d3.select(svgRef.current)
+              clearPartyHighlighting(svg)
+            }
+          }}
+        >
           <div className="w-64 h-64 relative" onClick={(e) => e.stopPropagation()}>
             {(pinnedDeputy || hoveredDeputy) ? (
               /* Deputy Bio Card */
-              <div className="w-full h-full pt-24 flex flex-col items-center justify-center">
+              <div className="w-full h-full pt-24 flex flex-col items-center justify-center pointer-events-auto">
                 {/* Deputy Photo with Party Ring */}
                 <div className="mb-6 relative">
                   <div 
@@ -1000,8 +1284,11 @@ export default function ParliamentPage() {
                 
                 {/* Age and Profession */}
                 <div className="mb-4 text-center">
-                  <p className="text-lg text-white mb-1">
-                    {(pinnedDeputy || hoveredDeputy)!.age} anos |  {(pinnedDeputy || hoveredDeputy)!.profession}
+                  <p className="text-md whitespace-nowrap text-white mb-1">
+                    {(pinnedDeputy || hoveredDeputy)!.age ? `${(pinnedDeputy || hoveredDeputy)!.age} anos` : 'Idade desconhecida'} | {(pinnedDeputy || hoveredDeputy)!.profession || 'Profissão não especificada'}
+                  </p>
+                  <p className="text-sm text-gray-300">
+                    {(pinnedDeputy || hoveredDeputy)!.mandates === 1 ? '1º mandato' : `${(pinnedDeputy || hoveredDeputy)!.mandates || 1} mandatos`}
                   </p>
               </div>
                 
@@ -1023,7 +1310,7 @@ export default function ParliamentPage() {
                           color: item.color,
                         }
                       }), {})}
-                  className="h-full w-full pointer-events-none"
+                  className="h-full w-full pointer-events-auto relative z-20 chart-container"
                     >
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -1031,25 +1318,27 @@ export default function ParliamentPage() {
                             data={pieChartData}
                             cx="50%"
                             cy="50%"
-                        innerRadius={50}
-                        outerRadius={100}
+                            innerRadius={50}
+                            outerRadius={100}
                             dataKey="value"
-                        startAngle={180}
-                        endAngle={0}
-                        animationBegin={0}
-                        isAnimationActive={false}
+                            startAngle={180}
+                            endAngle={0}
+                            animationBegin={0}
+                            isAnimationActive={false}
+                            onMouseEnter={(data, index) => setHoveredSegment(data)}
+                            onMouseLeave={() => setHoveredSegment(null)}
                           >
                             {pieChartData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
+                              <Cell 
+                                key={`cell-${index}`} 
+                                fill={entry.color}
+                                stroke={hoveredSegment && hoveredSegment.name === entry.name ? "#60a5fa" : "none"}
+                                strokeWidth={hoveredSegment && hoveredSegment.name === entry.name ? 3 : 0}
+                                opacity={hoveredSegment ? (hoveredSegment.name === entry.name ? 1 : 0.3) : 1}
+                                style={{ cursor: "pointer" }}
+                              />
                             ))}
                           </Pie>
-                          <ChartTooltip 
-                            content={<ChartTooltipContent />}
-                            formatter={(value: number, name: string) => [
-                              `${value} deputados`,
-                              name
-                            ]}
-                          />
                         </PieChart>
                       </ResponsiveContainer>
                     </ChartContainer>
@@ -1057,8 +1346,20 @@ export default function ParliamentPage() {
                 {/* Center Text */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
                       <div className="text-center">
-                    <div className="text-xl font-bold text-white mb-1">{totalSeats}</div>
-                    <div className="text-sm text-gray-300 font-medium">{getFilterTitle()}</div>
+                    {hoveredSegment ? (
+                      <>
+                        <div className="text-3xl font-bold text-white mb-1">{hoveredSegment.value}</div>
+                        <div className="text-sm text-gray-300 font-medium mb-1">{hoveredSegment.fullName || hoveredSegment.name}</div>
+                        <div className="text-xs text-gray-400">
+                          {((hoveredSegment.value / totalSeats) * 100).toFixed(1)}% do total
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-xl font-bold text-white mb-1">{totalSeats}</div>
+                        <div className="text-sm text-gray-300 font-medium">{getFilterTitle()}</div>
+                      </>
+                    )}
                   </div>
                 </div>
               </>

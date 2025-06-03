@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       await Promise.allSettled(
         batch.map(async (deputy: any) => {
           try {
-            const photoId = deputy.DepCadId
+            const photoId = deputy.CadId
             if (!photoId) return
             
             // Pre-fetch the image through our own API to cache it
