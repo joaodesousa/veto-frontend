@@ -31,6 +31,12 @@ export function Header() {
     }
   }, [])
 
+  // Navigation items
+  const navItems = [
+    { href: "/propostas", label: "Propostas" },
+    { href: "/parlamento", label: "Parlamento" },
+  ]
+
   return (
     <header
       className={cn("fixed top-0 z-50 w-full transition-all duration-300", {
@@ -58,6 +64,22 @@ export function Header() {
             </span>
           </Link>
         </div>
+        
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center gap-6">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-primary",
+                pathname === item.href ? "text-primary" : (isHomePage && !scrolled ? "text-white hover:text-white/80" : "text-muted-foreground"),
+              )}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
         
         <div className="flex items-center gap-2">
           <ThemeToggle isTransparent={isHomePage && !scrolled} />
