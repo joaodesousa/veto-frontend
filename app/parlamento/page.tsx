@@ -466,6 +466,21 @@ export default function ParliamentPage() {
       })
   }, [deputyMapping])
 
+  // Apply selected deputy highlighting
+  const applySelectedHighlighting = useCallback((svg: any, selectedDeputy: Deputy | null) => {
+    svg.selectAll("circle")
+      .attr("stroke", (d: any, i: number) => {
+        const deputy = deputyMapping[i]
+        if (!deputy || !selectedDeputy) return "none"
+        return deputy.id === selectedDeputy.id ? "#fbbf24" : "none"
+      })
+      .attr("stroke-width", (d: any, i: number) => {
+        const deputy = deputyMapping[i]
+        if (!deputy || !selectedDeputy) return 0
+        return deputy.id === selectedDeputy.id ? 4 : 0
+      })
+  }, [deputyMapping])
+
   // Clear party highlighting
   const clearPartyHighlighting = useCallback((svg: any) => {
     svg.selectAll("circle")
@@ -556,11 +571,11 @@ export default function ParliamentPage() {
           .on("click", () => {
             const deputy = deputyMapping[seatIndex]
             if (deputy) {
-              setPinnedDeputy(deputy)
-              // Highlight party members on age and experience filters
-              if (filterType === 'idade' || filterType === 'experiencia') {
-                setHighlightedParty(deputy.party)
-                applyPartyHighlighting(svg, deputy.party)
+              // Toggle selection - if clicking same deputy, deselect
+              if (pinnedDeputy && pinnedDeputy.id === deputy.id) {
+                setPinnedDeputy(null)
+              } else {
+                setPinnedDeputy(deputy)
               }
             }
           })
@@ -670,11 +685,11 @@ export default function ParliamentPage() {
                 const clickedSeatIndex = allSeats.indexOf(this)
                 const deputy = deputyMapping[clickedSeatIndex]
                 if (deputy) {
-                  setPinnedDeputy(deputy)
-                  // Highlight party members on age and experience filters
-                  if (filterType === 'idade' || filterType === 'experiencia') {
-                    setHighlightedParty(deputy.party)
-                    applyPartyHighlighting(svg, deputy.party)
+                  // Toggle selection - if clicking same deputy, deselect
+                  if (pinnedDeputy && pinnedDeputy.id === deputy.id) {
+                    setPinnedDeputy(null)
+                  } else {
+                    setPinnedDeputy(deputy)
                   }
                 }
               })
@@ -696,6 +711,13 @@ export default function ParliamentPage() {
 
     renderChart()
   }, [chartData, deputyMapping, loading])
+
+  // Apply highlighting when pinned deputy changes
+  useEffect(() => {
+    if (!svgRef.current) return
+    const svg = d3.select(svgRef.current)
+    applySelectedHighlighting(svg, pinnedDeputy)
+  }, [pinnedDeputy, applySelectedHighlighting])
 
   const totalSeats = parliamentData.reduce((sum, party) => sum + party.seats, 0)
 
@@ -1201,11 +1223,6 @@ export default function ParliamentPage() {
         {/* Parliament Visualization */}
         <div className="flex justify-center -mb-24 relative z-20 pointer-events-none" onClick={() => {
           setPinnedDeputy(null)
-          if (filterType === 'idade' || filterType === 'experiencia') {
-            setHighlightedParty(null)
-            const svg = d3.select(svgRef.current)
-            clearPartyHighlighting(svg)
-          }
         }}>
           <div className="pointer-events-none">
                   <svg
@@ -1219,14 +1236,7 @@ export default function ParliamentPage() {
         {/* Pie Chart / Deputy Bio - Below Parliament */}
         <div 
           className="flex justify-center mb-8 relative z-10" 
-          onClick={() => {
-            setPinnedDeputy(null)
-            if (filterType === 'idade' || filterType === 'experiencia') {
-              setHighlightedParty(null)
-              const svg = d3.select(svgRef.current)
-              clearPartyHighlighting(svg)
-            }
-          }}
+          onClick={() => setPinnedDeputy(null)}
         >
           <div className="w-64 h-64 relative" onClick={(e) => e.stopPropagation()}>
             {(pinnedDeputy || hoveredDeputy) ? (
@@ -1357,7 +1367,7 @@ export default function ParliamentPage() {
                     ) : (
                       <>
                         <div className="text-xl font-bold text-white mb-1">{totalSeats}</div>
-                        <div className="text-sm text-gray-300 font-medium">{getFilterTitle()}</div>
+                        <div className="pt-2 text-sm text-gray-300 font-medium">{getFilterTitle()}</div>
                       </>
                     )}
                   </div>
