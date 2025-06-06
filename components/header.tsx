@@ -35,6 +35,7 @@ export function Header() {
   const navItems = [
     { href: "/propostas", label: "Propostas" },
     { href: "/parlamento", label: "Parlamento" },
+    { href: "/governo", label: "Governo" },
   ]
 
   return (
