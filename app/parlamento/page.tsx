@@ -169,10 +169,15 @@ const loadParliamentChart = async () => {
     // @ts-ignore - d3-parliament-chart doesn't have types
     const module = await import('d3-parliament-chart')
     
-    // Try different possible exports
+    // The d3-parliament-chart package exports parliamentChart as default
     const parliamentChart = module.default || module.parliamentChart || module
     
-    return parliamentChart
+    if (typeof parliamentChart === 'function') {
+      return parliamentChart
+    }
+    
+    console.error('d3-parliament-chart module structure:', module)
+    return null
   } catch (error) {
     console.error('Failed to load d3-parliament-chart:', error)
     return null
@@ -599,106 +604,74 @@ export default function ParliamentPage() {
       try {
         const parliamentChart = await loadParliamentChart()
         
-        if (parliamentChart) {
-          // Try different usage patterns based on the documentation
-          let chart
-          
-          // Pattern 1: Direct function call
-          try {
-            if (typeof parliamentChart === 'function') {
-              chart = parliamentChart()
-            } else {
-              throw new Error('Not a function')
-            }
-          } catch (e) {
-            // Pattern 2: Check if it's attached to d3
-            try {
-              // @ts-ignore
-              if (d3.parliamentChart && typeof d3.parliamentChart === 'function') {
-                // @ts-ignore
-                chart = d3.parliamentChart()
-              } else {
-                throw new Error('d3.parliamentChart not found')
+        if (parliamentChart && typeof parliamentChart === 'function') {
+          // Create the chart instance
+          const chart = parliamentChart()
+            .width(width)
+            .aggregatedData(chartData)
+            .sections(1)
+            .sectionGap(256)
+            .seatRadius(9)  
+            .rowHeight(30)
+
+          // Create the chart
+          svg
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .call(chart);
+
+          // Add click handlers
+          svg.selectAll("circle")
+            .style("cursor", "pointer")
+            .style("pointer-events", "auto")
+            .attr("fill", (d: any, i: number) => {
+              // Apply color based on current filter
+              const deputy = deputyMapping[i]
+              return deputy ? getDeputyColor(deputy, i) : "#808080"
+            })
+            .on("mouseover", function(this: any) {
+              // Show deputy info
+              const allSeats = svg.selectAll("circle").nodes()
+              const hoveredSeatIndex = allSeats.indexOf(this)
+              const deputy = deputyMapping[hoveredSeatIndex]
+              if (deputy) {
+                setHoveredDeputy(deputy)
+                // Highlight party members on age and experience filters
+                if (filterType === 'idade' || filterType === 'experiencia') {
+                  setHighlightedParty(deputy.party)
+                  applyPartyHighlighting(svg, deputy.party)
+                }
               }
-            } catch (e2) {
-              // Pattern 3: Try calling parliamentChart directly if it's a constructor
-              try {
-                chart = new parliamentChart()
-              } catch (e3) {
-                throw new Error('All patterns failed')
+            })
+            .on("mouseout", function(this: any) {
+              if (!pinnedDeputy) {
+                setHoveredDeputy(null)
+                // Clear highlighting on age and experience filters
+                if (filterType === 'idade' || filterType === 'experiencia') {
+                  setHighlightedParty(null)
+                  clearPartyHighlighting(svg)
+                }
               }
-            }
-          }
-          
-          if (chart) {
-            // Configure the chart
-            chart
-              .width(width)
-              .aggregatedData(chartData)
-              .sections(1)
-              .sectionGap(256)
-              .seatRadius(9)  
-              .rowHeight(30)
-
-            // Create the chart
-            svg
-              .attr("width", width)
-              .attr("height", height)
-              .append("g")
-              .call(chart);
-
-            // Add click handlers
-            svg.selectAll("circle")
-              .style("cursor", "pointer")
-              .style("pointer-events", "auto")
-              .attr("fill", (d: any, i: number) => {
-                // Apply color based on current filter
-                const deputy = deputyMapping[i]
-                return deputy ? getDeputyColor(deputy, i) : "#808080"
-              })
-              .on("mouseover", function(this: any) {
-                // Show deputy info
-                const allSeats = svg.selectAll("circle").nodes()
-                const hoveredSeatIndex = allSeats.indexOf(this)
-                const deputy = deputyMapping[hoveredSeatIndex]
-                if (deputy) {
-                  setHoveredDeputy(deputy)
-                  // Highlight party members on age and experience filters
-                  if (filterType === 'idade' || filterType === 'experiencia') {
-                    setHighlightedParty(deputy.party)
-                    applyPartyHighlighting(svg, deputy.party)
-                  }
+            })
+            .on("click", function(this: any) {
+              const allSeats = svg.selectAll("circle").nodes()
+              const clickedSeatIndex = allSeats.indexOf(this)
+              const deputy = deputyMapping[clickedSeatIndex]
+              if (deputy) {
+                // Toggle selection - if clicking same deputy, deselect
+                if (pinnedDeputy && pinnedDeputy.id === deputy.id) {
+                  setPinnedDeputy(null)
+                } else {
+                  setPinnedDeputy(deputy)
                 }
-              })
-              .on("mouseout", function(this: any) {
-                if (!pinnedDeputy) {
-                  setHoveredDeputy(null)
-                  // Clear highlighting on age and experience filters
-                  if (filterType === 'idade' || filterType === 'experiencia') {
-                    setHighlightedParty(null)
-                    clearPartyHighlighting(svg)
-                  }
-                }
-              })
-              .on("click", function(this: any) {
-                const allSeats = svg.selectAll("circle").nodes()
-                const clickedSeatIndex = allSeats.indexOf(this)
-                const deputy = deputyMapping[clickedSeatIndex]
-                if (deputy) {
-                  // Toggle selection - if clicking same deputy, deselect
-                  if (pinnedDeputy && pinnedDeputy.id === deputy.id) {
-                    setPinnedDeputy(null)
-                  } else {
-                    setPinnedDeputy(deputy)
-                  }
-                }
-              })
+              }
+            })
 
-            return // Success, exit early
-          }
+          return // Success, exit early
         }
         
-        throw new Error('Failed to create chart')
+        throw new Error('Failed to create chart - parliamentChart not available or not a function')
         
       } catch (error) {
         console.error("Error with d3-parliament-chart, using fallback:", error)
