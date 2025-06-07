@@ -1,8 +1,26 @@
-import { Button } from "@/components/ui/button"
-import { FileTextIcon, BarChartIcon, LandmarkIcon } from "lucide-react"
-import { Header } from "@/components/header"
-import Link from "next/link"
+"use client"
 
+import { useState, useEffect } from "react"
+import {
+  Search,
+  FileText,
+  Users,
+  BarChart3,
+  Calendar,
+  ArrowRight,
+  ExternalLink,
+  Menu,
+  X,
+  ChevronDown,
+  Download,
+} from "lucide-react"
+import Link from "next/link"
+import { motion } from "framer-motion"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Header } from "@/components/header"
 
 export default async function Home() {
   // Party data with their colors
@@ -147,76 +165,205 @@ export default async function Home() {
               </div>
             </div>
 
-            {/* Cards - Enhanced with glass effect and animations */}
+            {/* Interface Mockup */}
             <div className="relative h-[500px] w-full hidden lg:block">
-              {/* Propostas Card */}
-              <div className="absolute left-0 top-10 w-72 rounded-xl card-glass p-6 float-medium z-10 transform transition-all duration-300 hover:scale-105 hover:shadow-blue-500/20 hover:shadow-lg">
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/20">
-                    <FileTextIcon className="h-6 w-6 text-blue-400" />
-                  </div>
-                  <h3 className="text-lg font-medium text-white">Propostas</h3>
-                </div>
-                <p className="text-sm leading-relaxed text-blue-100/80">Acompanhe todas as propostas legislativas</p>
-                <div className="mt-4 space-y-2">
-                  <div className="h-1 w-full rounded-full bg-blue-900/50">
-                    <div className="h-full w-2/3 rounded-full bg-gradient-to-r from-blue-400 to-blue-600"></div>
-                  </div>
-                  <div className="h-1 w-full rounded-full bg-blue-900/50">
-                    <div className="h-full w-1/2 rounded-full bg-gradient-to-r from-blue-400 to-blue-600"></div>
-                  </div>
-                </div>
-              </div>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, y: 50 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.8 }}
+                className="relative"
+              >
+                {/* Background decorative elements */}
+                <div className="absolute -top-8 -left-8 w-32 h-32 bg-blue-600/10 rounded-2xl opacity-60 z-0"></div>
+                <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-indigo-600/10 rounded-2xl opacity-40 z-0"></div>
+                <div className="absolute top-1/2 -left-4 w-16 h-16 bg-purple-600/10 rounded-xl opacity-30 z-0"></div>
 
-              {/* Votações Card */}
-              <div className="absolute right-5 top-32 w-64 rounded-xl card-glass p-6 float-slow z-20 transform transition-all duration-300 hover:scale-105 hover:shadow-blue-500/20 hover:shadow-lg">
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-500/20">
-                    <BarChartIcon className="h-6 w-6 text-indigo-400" />
-                  </div>
-                  <h3 className="text-lg font-medium text-white">Votações</h3>
-                </div>
-                <div className="mt-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-400">Aprovadas</span>
-                    <span className="text-xs text-gray-400">64%</span>
-                  </div>
-                  <div className="h-1.5 w-full rounded-full bg-indigo-900/50">
-                    <div className="h-full w-3/5 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500"></div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-400">Rejeitadas</span>
-                    <span className="text-xs text-gray-400">36%</span>
-                  </div>
-                  <div className="h-1.5 w-full rounded-full bg-indigo-900/50">
-                    <div className="h-full w-1/3 rounded-full bg-gradient-to-r from-red-500 to-orange-500"></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Assembleia Card */}
-              <div className="absolute bottom-0 left-16 w-80 rounded-xl card-glass p-6 float-fast z-30 transform transition-all duration-300 hover:scale-105 hover:shadow-blue-500/20 hover:shadow-lg">
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600/20">
-                    <LandmarkIcon className="h-6 w-6 text-blue-400" />
-                  </div>
-                  <h3 className="text-lg font-medium text-white">Assembleia da República</h3>
-                </div>
-                <p className="mb-4 text-sm leading-relaxed text-blue-100/80">O centro da democracia Portuguesa</p>
-                <div className="mt-4 flex flex-wrap gap-3 justify-center">
-                  {shuffledParties.map((party) => (
-                    <div key={party.id} className="flex flex-col items-center">
-                      <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${party.color} shadow-lg`}></div>
-                      <span className="mt-2 text-xs text-gray-400">{party.id}</span>
+                {/* Main interface mockup */}
+                <div className="relative z-10 bg-[#1a1f36]/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-blue-500/20 overflow-hidden">
+                  {/* Browser header */}
+                  <div className="flex items-center justify-between px-6 py-4 bg-[#0f1419]/50 border-b border-blue-500/20">
+                    <div className="flex items-center space-x-2">
+                      <div className="h-3 w-3 rounded-full bg-red-500"></div>
+                      <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
+                      <div className="h-3 w-3 rounded-full bg-green-500"></div>
                     </div>
-                  ))}
+                    <div className="flex-1 mx-4">
+                      <div className="bg-[#0f1419] rounded-lg px-3 py-1 text-xs text-gray-400 border border-blue-500/20">
+                        veto.pt/propostas
+                      </div>
+                    </div>
+                    <div className="w-16"></div>
+                  </div>
+
+                  {/* Interface content */}
+                  <div className="p-4">
+                    {/* Header section */}
+                    <div className="mb-4">
+                      <h1 className="text-lg font-bold text-blue-100 mb-1">Propostas Legislativas</h1>
+                      <p className="text-xs text-blue-200/70">Explore e acompanhe todas as propostas em discussão no Parlamento Português.</p>
+                </div>
+
+                    {/* Search bar */}
+                    <div className="mb-4">
+                      <div className="relative">
+                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                          <Search className="h-3 w-3 text-blue-400" />
+                  </div>
+                        <div className="h-8 bg-[#0f1419]/50 rounded-lg border border-blue-500/20 pl-8 flex items-center">
+                          <span className="text-xs text-blue-200">Pesquisar propostas...</span>
+                          <div className="ml-auto mr-3 h-1 w-1 bg-blue-400 rounded-full animate-pulse"></div>
+                  </div>
                 </div>
               </div>
+
+                    {/* Main layout with filters and content */}
+                    <div className="flex gap-3">
+                      {/* Filters sidebar */}
+                      <div className="w-16 bg-[#0f1419]/30 rounded p-2 border border-blue-500/20">
+                        <div className="text-xs text-blue-300 mb-2 font-medium">Filtros</div>
+                        <div className="space-y-1">
+                          <div className="h-1 bg-blue-500/40 rounded w-full"></div>
+                          <div className="h-1 bg-blue-500/30 rounded w-3/4"></div>
+                          <div className="h-1 bg-blue-500/20 rounded w-full"></div>
+                          <div className="h-1 bg-blue-500/30 rounded w-2/3"></div>
+                        </div>
+                      </div>
+
+                      {/* Content area */}
+                      <div className="flex-1">
+                        {/* Results count and active filters */}
+                        <div className="mb-3">
+                          <div className="text-xs text-blue-300 mb-2">247 propostas encontradas</div>
+                          <div className="flex gap-1 flex-wrap">
+                            <div className="px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded text-xs">XVI</div>
+                            <div className="px-2 py-0.5 bg-purple-500/20 text-purple-300 rounded text-xs">Lei</div>
+                          </div>
+                        </div>
+
+                        {/* Proposal cards grid */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <motion.div
+                            className="border border-blue-500/20 rounded p-2 bg-[#0f1419]/30 hover:bg-[#0f1419]/50 transition-colors"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 1.2, duration: 0.5 }}
+                          >
+                            <div className="flex gap-1 mb-2">
+                              <div className="px-1 py-0.5 bg-green-500/20 text-green-300 rounded text-xs">Aprovado</div>
+                              <div className="px-1 py-0.5 bg-blue-500/20 text-blue-300 rounded text-xs">PS</div>
+                            </div>
+                            <div className="h-2 bg-blue-400 rounded w-full mb-1"></div>
+                            <div className="h-1 bg-blue-500/20 rounded w-3/4 mb-1"></div>
+                            <div className="flex items-center gap-1 text-xs text-blue-300/70">
+                              <FileText className="h-2 w-2" />
+                              <span>Lei</span>
+                  </div>
+                          </motion.div>
+
+                          <motion.div
+                            className="border border-blue-500/20 rounded p-2 bg-[#0f1419]/30"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 1.4, duration: 0.5 }}
+                          >
+                            <div className="flex gap-1 mb-2">
+                              <div className="px-1 py-0.5 bg-yellow-500/20 text-yellow-300 rounded text-xs">Em análise</div>
+                              <div className="px-1 py-0.5 bg-orange-500/20 text-orange-300 rounded text-xs">PSD</div>
+                </div>
+                            <div className="h-2 bg-orange-400 rounded w-5/6 mb-1"></div>
+                            <div className="h-1 bg-blue-500/20 rounded w-2/3 mb-1"></div>
+                            <div className="flex items-center gap-1 text-xs text-blue-300/70">
+                              <FileText className="h-2 w-2" />
+                              <span>Decreto-Lei</span>
+                  </div>
+                          </motion.div>
+
+                          <motion.div
+                            className="border border-blue-500/20 rounded p-2 bg-[#0f1419]/30"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 1.6, duration: 0.5 }}
+                          >
+                            <div className="flex gap-1 mb-2">
+                              <div className="px-1 py-0.5 bg-blue-500/20 text-blue-300 rounded text-xs">Discussão</div>
+                              <div className="px-1 py-0.5 bg-red-500/20 text-red-300 rounded text-xs">CH</div>
+                  </div>
+                            <div className="h-2 bg-red-400 rounded w-4/5 mb-1"></div>
+                            <div className="h-1 bg-blue-500/20 rounded w-full mb-1"></div>
+                            <div className="flex items-center gap-1 text-xs text-blue-300/70">
+                              <FileText className="h-2 w-2" />
+                              <span>Proposta</span>
+                  </div>
+                          </motion.div>
+
+                          <motion.div
+                            className="border border-blue-500/20 rounded p-2 bg-[#0f1419]/30 opacity-70"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 0.7, y: 0 }}
+                            transition={{ delay: 1.8, duration: 0.5 }}
+                          >
+                            <div className="flex gap-1 mb-2">
+                              <div className="px-1 py-0.5 bg-gray-500/20 text-gray-300 rounded text-xs">Rejeitado</div>
+                              <div className="px-1 py-0.5 bg-green-500/20 text-green-300 rounded text-xs">BE</div>
+                  </div>
+                            <div className="h-2 bg-gray-500 rounded w-3/4 mb-1"></div>
+                            <div className="h-1 bg-blue-500/20 rounded w-4/5 mb-1"></div>
+                            <div className="flex items-center gap-1 text-xs text-blue-300/70">
+                              <FileText className="h-2 w-2" />
+                              <span>Resolução</span>
+                </div>
+                          </motion.div>
+              </div>
+
+                        {/* Pagination */}
+                        <div className="mt-3 flex justify-center">
+                          <div className="flex items-center gap-1">
+                            <div className="w-4 h-4 bg-blue-500/30 rounded border border-blue-500/50"></div>
+                            <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                            <div className="w-4 h-4 bg-blue-500/30 rounded border border-blue-500/50"></div>
+                            <div className="text-xs text-blue-300/70">...</div>
+                            <div className="w-4 h-4 bg-blue-500/30 rounded border border-blue-500/50"></div>
+                          </div>
+                  </div>
+                </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
             </div>
           </div>
         </div>
       </main>
     </div>
+  )
+}
+
+// Navigation Link Component with hover animation
+function NavLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className={`relative px-4 py-2 text-sm font-medium transition-colors ${
+        active ? "text-gray-900" : "text-gray-600 hover:text-gray-900"
+      }`}
+    >
+      {children}
+      <motion.div
+        className="absolute bottom-0 left-0 h-0.5 bg-gray-900"
+        initial={{ width: active ? "100%" : "0%" }}
+        whileHover={{ width: "100%" }}
+        transition={{ duration: 0.2 }}
+      />
+    </Link>
+  )
+}
+
+// Mobile Navigation Link
+function MobileNavLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link href={href} className="block py-2 px-4 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">
+      {children}
+    </Link>
   )
 }
 

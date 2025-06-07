@@ -15,7 +15,10 @@ import {
   TreePine,
   Users,
   Zap,
-  Icon
+  Icon,
+  Calendar,
+  MapPin,
+  Building2
 } from "lucide-react"
 import Image from "next/image"
 import { motion } from "framer-motion"
@@ -163,24 +166,24 @@ const MemberCard = ({ member, isPM = false }: { member: Member; isPM?: boolean }
   const getCardStyles = () => {
     if (isPM) {
       return {
-        background: "linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 50%, rgba(29, 78, 216, 0.05) 100%)",
-        border: "1px solid rgba(59, 130, 246, 0.3)",
-        shadow: "0 8px 32px rgba(59, 130, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-        hoverShadow: "0 12px 40px rgba(59, 130, 246, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15)"
+        background: "linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.05) 100%)",
+        border: "2px solid rgba(212, 175, 55, 0.5)",
+        shadow: "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
+        hoverShadow: "0 12px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25)"
       };
     } else if (member.isStateMinister) {
       return {
-        background: "linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.1) 50%, rgba(180, 83, 9, 0.05) 100%)",
-        border: "1px solid rgba(245, 158, 11, 0.3)",
-        shadow: "0 8px 32px rgba(245, 158, 11, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-        hoverShadow: "0 12px 40px rgba(245, 158, 11, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15)"
+        background: "linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.04) 100%)",
+        border: "1px solid rgba(156, 163, 175, 0.4)",
+        shadow: "0 6px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15)",
+        hoverShadow: "0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2)"
       };
     } else {
       return {
-        background: "linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.02) 100%)",
-        border: "1px solid rgba(255, 255, 255, 0.2)",
-        shadow: "0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-        hoverShadow: "0 12px 40px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15)"
+        background: "linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 50%, rgba(255, 255, 255, 0.02) 100%)",
+        border: "1px solid rgba(156, 163, 175, 0.3)",
+        shadow: "0 4px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+        hoverShadow: "0 6px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15)"
       };
     }
   };
@@ -190,18 +193,17 @@ const MemberCard = ({ member, isPM = false }: { member: Member; isPM?: boolean }
   return (
     <motion.div
       variants={cardVariants}
-      className={`relative group rounded-2xl transition-all duration-500 backdrop-blur-xl ${isPM ? 'w-full max-w-sm' : 'w-80'}`}
+      className={`relative group rounded-none transition-all duration-500 backdrop-blur-xl ${isPM ? 'w-full max-w-md' : 'w-72'}`}
       style={{
         background: styles.background,
         border: styles.border,
         boxShadow: styles.shadow,
       }}
       whileHover={{ 
-        y: -8, 
+        y: -4, 
         transition: { duration: 0.3 }
       }}
       onHoverStart={() => {
-        // Dynamic shadow on hover via inline styles for more control
         const element = document.querySelector(`[data-member="${member.name}"]`) as HTMLElement;
         if (element) {
           element.style.boxShadow = styles.hoverShadow;
@@ -215,71 +217,67 @@ const MemberCard = ({ member, isPM = false }: { member: Member; isPM?: boolean }
       }}
       data-member={member.name}
     >
-      {/* Subtle top highlight */}
-      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+      {/* Official header bar */}
+      {isPM && (
+        <div className="bg-gradient-to-r from-yellow-600/20 to-yellow-500/15 border-b border-yellow-400/30 px-6 py-3">
+          <div className="flex items-center justify-center gap-2 text-yellow-200">
+            <Crown className="w-4 h-4" />
+            <span className="text-xs font-semibold tracking-wider uppercase">Chefe do Governo</span>
+          </div>
+        </div>
+      )}
       
       {/* Card content */}
-      <div className="relative p-8 text-center">
-        {/* Photo container with enhanced styling */}
+      <div className={`relative ${isPM ? 'p-8' : 'p-6'} text-center`}>
+        {/* Official photo with formal styling */}
         <div className="mb-6 relative">
-          <div className={`relative ${isPM ? "w-44 h-52" : "w-36 h-44"} mx-auto`}>
-            {/* Photo background glow */}
-            <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${
-              isPM ? 'from-blue-400/20 to-blue-600/10' :
-              member.isStateMinister ? 'from-amber-400/20 to-amber-600/10' :
-              'from-white/10 to-gray-400/5'
-            } blur-xl`} />
-            
-            {/* Photo frame */}
-            <div className={`relative rounded-2xl p-1 ${
-              isPM ? 'bg-gradient-to-br from-blue-400/30 to-blue-600/20' :
-              member.isStateMinister ? 'bg-gradient-to-br from-amber-400/30 to-amber-600/20' :
-              'bg-gradient-to-br from-white/20 to-gray-400/10'
-            }`}>
+          <div className={`relative ${isPM ? "w-40 h-48" : "w-32 h-40"} mx-auto`}>
+            <div className={`relative border-2 ${
+              isPM ? 'border-yellow-400/40' : 'border-gray-400/30'
+            } overflow-hidden`}>
               <Image
                 src={member.photoUrl}
                 alt={member.name}
-                width={isPM ? 160 : 130}
-                height={isPM ? 190 : 160}
-                className="w-full h-full rounded-xl object-cover shadow-2xl"
+                width={isPM ? 160 : 128}
+                height={isPM ? 192 : 160}
+                className="w-full h-full object-cover"
               />
+              {/* Official overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
             </div>
           </div>
         </div>
 
-        {/* Name with enhanced typography */}
-        <h2 className={`font-bold text-white mb-3 ${isPM ? "text-2xl" : "text-xl"} tracking-tight`}>
-          {member.name}
-        </h2>
-
-        {/* Role with subtle styling */}
-        <div className={`text-sm mb-6 font-medium font-inter ${
-          isPM ? "text-blue-200" : 
-          member.isStateMinister ? "text-amber-200" : 
-          "text-gray-200"
-        }`}>
-          {member.role}
+        {/* Official name and title */}
+        <div className="mb-4">
+          <h2 className={`font-bold text-white mb-2 ${isPM ? "text-xl" : "text-lg"} tracking-tight`}>
+            {member.name}
+          </h2>
+          <div className={`text-xs mb-2 font-medium uppercase tracking-wider ${
+            isPM ? "text-yellow-200" : 
+            member.isStateMinister ? "text-gray-300" : 
+            "text-gray-400"
+          }`}>
+            {member.role}
+          </div>
         </div>
 
-        {/* Party badge with enhanced styling */}
+        {/* Official party affiliation */}
         <div className="flex justify-center">
           <Badge
             variant="outline"
-            className={`text-sm font-semibold px-4 py-2 rounded-full border backdrop-blur-sm ${
+            className={`text-xs font-semibold px-3 py-1 rounded-none border backdrop-blur-sm ${
               member.party === 'PSD' ? 
-                'border-orange-400/50 text-orange-200 bg-orange-500/20 shadow-lg shadow-orange-500/20' :
+                'border-orange-400/40 text-orange-200 bg-orange-500/15' :
               member.party === 'CDS-PP' ? 
-                'border-blue-400/50 text-blue-200 bg-blue-500/20 shadow-lg shadow-blue-500/20' :
-                'border-gray-400/50 text-gray-200 bg-gray-500/20 shadow-lg shadow-gray-500/20'
+                'border-blue-400/40 text-blue-200 bg-blue-500/15' :
+                'border-gray-400/40 text-gray-200 bg-gray-500/15'
             }`}
           >
             {member.party}
           </Badge>
         </div>
       </div>
-
-      {/* Bottom subtle highlight */}
-      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
     </motion.div>
   );
 };
@@ -294,7 +292,7 @@ export default function GovernmentStructurePage() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.05,
+        staggerChildren: 0.03,
       },
     },
   };
@@ -306,40 +304,52 @@ export default function GovernmentStructurePage() {
         <div className="border-b border-white/10">
           <div className="container py-8">
             <div className="flex flex-col gap-4">
-              <h1 className="text-3xl font-bold tracking-tight">Composição do Governo</h1>
-              <p className="text-muted-foreground">
-                XXV Governo Constitucional de Portugal
+              <h1 className="text-3xl font-bold tracking-tight">Governo Português</h1>
+              <p className="text-gray-400">
+                XXV Governo Constitucional • Palácio de São Bento, Lisboa
               </p>
             </div>
           </div>
         </div>
 
-        <div className="space-y-16 mt-12">
+        <div className="space-y-20 mt-16">
           {/* Prime Minister Section */}
-          <section className="flex justify-center">
+          <section>
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="w-full max-w-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="text-center mb-12"
             >
-              <MemberCard member={primeMinister} isPM={true} />
+              <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">Primeiro-Ministro</h2>
+              <p className="text-gray-400 text-sm">Chefe do Governo da República Portuguesa</p>
             </motion.div>
+            <div className="flex justify-center">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="w-full max-w-md"
+              >
+                <MemberCard member={primeMinister} isPM={true} />
+              </motion.div>
+            </div>
           </section>
 
           {/* State Ministers Section */}
           {stateMinisters.length > 0 && (
             <section>
-              <motion.h2 
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="text-2xl font-bold text-yellow-300 text-center mb-8"
+                transition={{ delay: 0.4 }}
+                className="text-center mb-12"
               >
-                Ministros de Estado
-              </motion.h2>
+                <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">Ministros de Estado</h2>
+                <p className="text-gray-400 text-sm">Ministros com competências especiais e coordenação transversal</p>
+              </motion.div>
               <motion.div
-                className="flex flex-wrap gap-8 justify-center"
+                className="flex flex-wrap gap-8 justify-center max-w-6xl mx-auto"
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
@@ -353,16 +363,17 @@ export default function GovernmentStructurePage() {
 
           {/* Regular Ministers Section */}
           <section>
-            <motion.h2 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="text-2xl font-bold text-blue-300 text-center mb-8"
+              transition={{ delay: 0.6 }}
+              className="text-center mb-12"
             >
-              Ministros
-            </motion.h2>
+              <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">Ministros</h2>
+              <p className="text-gray-400 text-sm">Membros do Conselho de Ministros responsáveis pelos respetivos ministérios</p>
+            </motion.div>
             <motion.div
-              className="flex flex-wrap gap-8 justify-center"
+              className="flex flex-wrap gap-8 justify-center max-w-7xl mx-auto"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
@@ -373,6 +384,7 @@ export default function GovernmentStructurePage() {
             </motion.div>
           </section>
         </div>
+
       </div>
     </div>
   )
