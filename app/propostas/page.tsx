@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { ProposalCardSkeleton } from "@/components/proposal-skeleton" 
 import { FilterSkeleton } from "@/components/filter-skeleton"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { LegislatureNotice } from "@/components/legislature-notice"
 
 import { fetchProposals, fetchTypes, fetchPhases, fetchAuthors, fetchParties, fetchLegislaturas } from "@/lib/api"
 import { Proposal, Author, ApiResponse, Legislatura } from "@/lib/types"
@@ -360,6 +361,8 @@ function ProposalsContent() {
         </div>
 
         <div className="container py-6">
+          <LegislatureNotice />
+          
           <div className="flex flex-col gap-6">
             {/* Search and Filters Bar - Always visible */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

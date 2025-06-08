@@ -129,7 +129,7 @@ const governmentMembers: Member[] = [
   },
   {
     role: "Ministra do Trabalho, Solidariedade e Segurança Social",
-    name: "Maria do Rosário Palma Ramalho",
+    name: "Maria do Rosário Ramalho",
     party: "Independente",
     photoUrl: "https://www.portugal.gov.pt/upload/imagens/i063797.jpg",
     icon: Users,
@@ -253,7 +253,7 @@ const MemberCard = ({ member, isPM = false }: { member: Member; isPM?: boolean }
           <h2 className={`font-bold text-white mb-2 ${isPM ? "text-xl" : "text-lg"} tracking-tight`}>
             {member.name}
           </h2>
-          <div className={`text-xs mb-2 font-medium uppercase tracking-wider ${
+          <div className={`text-xs mb-2 font-medium uppercase tracking-wider min-h-[2.5rem] flex items-center justify-center ${
             isPM ? "text-yellow-200" : 
             member.isStateMinister ? "text-gray-300" : 
             "text-gray-400"

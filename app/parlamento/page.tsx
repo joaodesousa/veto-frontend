@@ -10,6 +10,7 @@ import { Users, Building2, MapPin, Calendar, X, Mail, Phone, GraduationCap, Brie
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import * as d3 from 'd3'
+import { LegislatureNotice } from "@/components/legislature-notice"
 
 // Party configuration with colors and full names
 const partyConfig: Record<string, { name: string; color: string; leader?: string; founded?: string; ideology?: string }> = {
@@ -712,6 +713,10 @@ export default function ParliamentPage() {
               </div>
             </div>
 
+            <div className="container py-6">
+              <LegislatureNotice />
+            </div>
+
             {/* Mobile Parliament Overview Skeleton */}
             <div className="py-8 space-y-6">
               {/* Quick Stats Skeleton */}
@@ -817,6 +822,10 @@ export default function ParliamentPage() {
             </div>
           </div>
 
+          <div className="container py-6">
+            <LegislatureNotice />
+          </div>
+
           {/* Filter Buttons */}
           <div className="flex items-center justify-center gap-4 mb-8 mt-12">
             <span className="text-sm text-gray-400">Ver por:</span>
@@ -902,6 +911,10 @@ export default function ParliamentPage() {
                 </p>
               </div>
             </div>
+          </div>
+
+          <div className="container py-6">
+            <LegislatureNotice />
           </div>
 
           {/* Mobile Parliament Overview */}
@@ -1063,6 +1076,10 @@ export default function ParliamentPage() {
               </p>
             </div>
           </div>
+        </div>
+
+        <div className="container py-6">
+          <LegislatureNotice />
         </div>
 
         {/* Filter Buttons */}
