@@ -55,8 +55,8 @@ function ProposalsContent() {
     if (initialFilters.legislaturas && initialFilters.legislaturas.length > 0) {
       return initialFilters.legislaturas;
     }
-    // Otherwise default to "XVI"
-    return ["XVI"];
+    // Otherwise default to "XVII"
+    return ["XVII"];
   })
   const [selectedTypes, setSelectedTypes] = useState<string[]>(initialFilters.types || [])
   const [selectedPhases, setSelectedPhases] = useState<string[]>(initialFilters.phases || [])
