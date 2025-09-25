@@ -10,7 +10,6 @@ import { Users, Building2, MapPin, Calendar, X, Mail, Phone, GraduationCap, Brie
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import * as d3 from 'd3'
-import { LegislatureNotice } from "@/components/legislature-notice"
 
 // Party configuration with colors and full names
 const partyConfig: Record<string, { name: string; color: string; leader?: string; founded?: string; ideology?: string }> = {
@@ -71,11 +70,17 @@ const partyConfig: Record<string, { name: string; color: string; leader?: string
     ideology: "Política verde, Direitos dos animais"
   },
   "L": {
-    name: "Livre", 
+    name: "Livre",
     color: "#00FF00", // Bright green
     leader: "Rui Tavares",
     founded: "2014",
     ideology: "Política verde, Europeísmo"
+  },
+  "JPP": {
+    name: "Juntos Pelo Povo",
+    color: "#00aa85",
+    founded: "2020",
+    ideology: "Populismo"
   },
   "CDS": {
     name: "Centro Democrático Social",
@@ -113,17 +118,17 @@ const partyConfig: Record<string, { name: string; color: string; leader?: string
 
 interface ApiDeputy {
   _id: string
-  CadId?: number
+  DepId: number
   DepCadId?: number
   DepNomeCompleto: string
   DepNomeParlamentar: string
   DepCPDes: string
-  CadProfissao?: string
-  CadDtNascimento?: string
-  CadDeputadoLegis?: Array<{
-    // Legislature history - we'll use this to count mandates
-    [key: string]: any
-  }>
+  BiographicalInfo?: {
+    CadDtNascimento?: string
+    CadProfissao?: string
+    CadSexo?: string
+  }
+  mandateCount?: number
   DepGP: Array<{
     gpSigla: string
     gpDtInicio: string
@@ -243,7 +248,7 @@ export default function ParliamentPage() {
     const fetchDeputies = async () => {
       try {
         setLoading(true)
-        const response = await fetch('https://legis.veto.pt/api/deputados/efetivos?limit=230')
+        const response = await fetch('/api/deputados')
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
@@ -268,7 +273,7 @@ export default function ParliamentPage() {
           
           return {
             id: apiDeputy._id,
-            photoId: apiDeputy.CadId?.toString() || "",
+            photoId: apiDeputy.DepCadId?.toString() || "",
             name: apiDeputy.DepNomeParlamentar,
             fullName: apiDeputy.DepNomeCompleto,
             party: partyCode,
@@ -276,9 +281,9 @@ export default function ParliamentPage() {
             color: config.color,
             constituency: apiDeputy.DepCPDes,
             status: currentStatus?.sioDes || "Unknown",
-            age: calculateAge(apiDeputy.CadDtNascimento || "") || undefined,
-            profession: apiDeputy.CadProfissao,
-            mandates: apiDeputy.CadDeputadoLegis?.length || 1, // Count actual legislatures
+            age: calculateAge(apiDeputy.BiographicalInfo?.CadDtNascimento || "") || undefined,
+            profession: apiDeputy.BiographicalInfo?.CadProfissao,
+            mandates: apiDeputy.mandateCount || 1,
             committees: ["Educação", "Saúde", "Economia", "Defesa", "Ambiente"][Math.floor(Math.random() * 3)]
           }
         })
@@ -324,7 +329,7 @@ export default function ParliamentPage() {
   const chartData = useMemo(() => {
     if (filterType === 'partidos') {
       // Define the desired left-to-right order
-      const partyOrder = ["BE", "PCP", "L", "PS", "PAN", "PSD", "CDS-PP", "IL", "CH"]
+      const partyOrder = ["BE", "PCP", "L", "JPP", "PS", "PAN", "PSD", "CDS-PP", "IL", "CH"]
       
       const orderedData: any[] = []
       
@@ -411,7 +416,7 @@ export default function ParliamentPage() {
     const mapping: Deputy[] = []
     
     // Always follow the same order as party-based chartData for consistent positions
-    const partyOrder = ["BE", "PCP", "L", "PS", "PAN", "PSD", "CDS-PP", "IL", "CH"]
+    const partyOrder = ["BE", "PCP", "L", "JPP", "PS", "PAN", "PSD", "CDS-PP", "IL", "CH"]
     
     // Add deputies in the specified party order
     partyOrder.forEach(partyCode => {
@@ -713,10 +718,6 @@ export default function ParliamentPage() {
               </div>
             </div>
 
-            <div className="container py-6">
-              <LegislatureNotice />
-            </div>
-
             {/* Mobile Parliament Overview Skeleton */}
             <div className="py-8 space-y-6">
               {/* Quick Stats Skeleton */}
@@ -822,10 +823,6 @@ export default function ParliamentPage() {
             </div>
           </div>
 
-          <div className="container py-6">
-            <LegislatureNotice />
-          </div>
-
           {/* Filter Buttons */}
           <div className="flex items-center justify-center gap-4 mb-8 mt-12">
             <span className="text-sm text-gray-400">Ver por:</span>
@@ -911,10 +908,6 @@ export default function ParliamentPage() {
                 </p>
               </div>
             </div>
-          </div>
-
-          <div className="container py-6">
-            <LegislatureNotice />
           </div>
 
           {/* Mobile Parliament Overview */}
@@ -1076,10 +1069,6 @@ export default function ParliamentPage() {
               </p>
             </div>
           </div>
-        </div>
-
-        <div className="container py-6">
-          <LegislatureNotice />
         </div>
 
         {/* Filter Buttons */}
@@ -1325,7 +1314,7 @@ export default function ParliamentPage() {
                             endAngle={0}
                             animationBegin={0}
                             isAnimationActive={false}
-                            onMouseEnter={(data, index) => setHoveredSegment(data)}
+                            onMouseEnter={(data) => setHoveredSegment(data)}
                             onMouseLeave={() => setHoveredSegment(null)}
                           >
                             {pieChartData.map((entry, index) => (
