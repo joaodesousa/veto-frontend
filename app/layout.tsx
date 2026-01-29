@@ -69,7 +69,7 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <link rel="manifest" href="/site.webmanifest" />
-        <script defer src="https://umami.outplay.cloud/script.js" data-website-id="fc1a5619-75ce-4100-9357-7baeac458ce7"></script>
+        <script defer src="https://u.xiu.sh/script.js" data-website-id="a59bd50d-810c-463e-9ee8-d8e69f4cb683"></script>
       </head>
       <body className={cn("min-h-screen bg-background font-sans antialiased")}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
